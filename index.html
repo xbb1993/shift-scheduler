@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>5人月度排班工具</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  :root{--bg:#f5f7fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--primary:#2563eb;--primary2:#dbeafe;--ok:#15803d;--warn:#b45309;--danger:#b91c1c;--rest:#eefcf3;--night:#f3f4f6;--duty:#fff7ed;--white:#eff6ff}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  .app{max-width:1200px;margin:0 auto;padding:18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.title{font-size:24px;font-weight:800}.subtitle{font-size:13px;color:var(--muted);margin-top:3px}
+  .stepbar{display:flex;gap:8px;overflow:auto;padding-bottom:10px}.step{white-space:nowrap;padding:8px 12px;border-radius:999px;background:#e9edf5;color:#64748b;font-size:13px}.step.active{background:var(--primary);color:#fff}.step.done{background:#dcfce7;color:#166534}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(15,23,42,.04)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.section-title{font-size:17px;font-weight:800;margin-bottom:4px}.hint{font-size:13px;color:var(--muted);line-height:1.6}
+  button,input,select{font:inherit}.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;cursor:pointer}.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}.btn.ghost{background:#f8fafc}.btn.danger{color:var(--danger);border-color:#fecaca}.btn:disabled{opacity:.5;cursor:not-allowed}
+  input[type="month"],input[type="text"],select{border:1px solid #d1d5db;border-radius:10px;padding:9px 10px;background:#fff;min-height:40px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+  .actions{display:flex;justify-content:space-between;gap:10px;margin-top:14px}.actions .right{margin-left:auto;display:flex;gap:8px}
+  .calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:12px}.dow{font-size:12px;color:var(--muted);padding:6px;text-align:center}.day{min-height:66px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:7px;cursor:pointer;position:relative}.day.blank{visibility:hidden}.day .num{font-weight:700}.day.holiday{background:#fef3c7;border-color:#fde68a}.day.duty-date{box-shadow:inset 0 0 0 2px #fdba74}.day.holiday.duty-date{background:#fef3c7}.day small{display:block;color:var(--muted);margin-top:6px;font-size:10px}.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}.legend span{display:inline-flex;align-items:center;gap:5px}.dot{width:12px;height:12px;border-radius:3px;border:1px solid var(--line);display:inline-block}.dot.h{background:#fef3c7}.dot.d{background:#fff7ed}
+  .check-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:12px}.check{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;align-items:center;gap:8px;background:#fff}.check input{width:18px;height:18px}
+  .people-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.people-col{border:1px solid var(--line);border-radius:14px;padding:12px}.person-row{display:flex;gap:7px;align-items:center;margin:7px 0}.person-row input{flex:1}.person-row .tag{font-size:11px;color:var(--muted)}
+  .firstday{overflow:auto}.firstday table{min-width:520px}.firstday select{min-width:92px}
+  table{border-collapse:separate;border-spacing:0;width:100%}.matrix-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.matrix{min-width:1180px}.matrix th,.matrix td{padding:9px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center;font-size:13px;white-space:nowrap}.matrix th:first-child,.matrix td:first-child{min-width:105px;width:105px}.matrix th:not(:first-child),.matrix td:not(:first-child){min-width:62px;width:62px}.matrix th{background:#f8fafc;position:sticky;top:0;z-index:2}.matrix th:first-child,.matrix td:first-child{position:sticky;left:0;z-index:3;background:#fff}.matrix th:first-child{z-index:4;background:#f8fafc}.cell-duty{background:var(--duty);font-weight:800}.cell-night{background:var(--night)}.cell-rest{background:var(--rest)}.cell-white{background:var(--white)}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:9px;margin:12px 0}.stat{border:1px solid var(--line);border-radius:12px;padding:10px}.stat b{font-size:20px;display:block}.stat span{font-size:12px;color:var(--muted)}
+  .alert{padding:11px 12px;border-radius:10px;font-size:13px;margin:10px 0;line-height:1.6}.alert.info{background:#eff6ff;color:#1e40af}.alert.warn{background:#fffbeb;color:#92400e}.alert.error{background:#fef2f2;color:#991b1b}.alert.ok{background:#f0fdf4;color:#166534}
+  .footer-note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:12px}.hidden{display:none!important}.small{font-size:12px}
+  @media(max-width:720px){.app{padding:10px}.people-grid{grid-template-columns:1fr}.title{font-size:20px}.day{min-height:58px;padding:5px}.day small{font-size:9px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div><div class="title">5人月度排班工具</div><div class="subtitle">纯本地运行 · 不保存数据 · 规则驱动排班</div></div>
+    <button class="btn ghost" id="restartBtn">重新开始</button>
+  </div>
+  <div class="stepbar" id="stepbar">
+    <div class="step active" data-step="1">1. 选择月份</div><div class="step" data-step="2">2. 法定休息日</div><div class="step" data-step="3">3. 值班日期</div><div class="step" data-step="4">4. 人员与1号班次</div><div class="step" data-step="5">5. 生成结果</div>
+  </div>
+
+  <section id="step1" class="card">
+    <div class="section-title">选择排班月份</div>
+    <div class="hint">选择月份后，工具会按当月自然日生成日历。默认周六、周日为法定休息日。</div>
+    <div class="row" style="margin-top:12px"><div class="field"><label>排班月份</label><input id="monthInput" type="month" /></div><button class="btn primary" id="startBtn">开始排班</button></div>
+  </section>
+
+  <section id="step2" class="card hidden">
+    <div class="row between"><div><div class="section-title">法定休息日</div><div class="hint">默认周六、周日。点击日期可切换是否为法定休息日；节假日、补班均可手动修正。</div></div><div class="small" id="holidayCount"></div></div>
+    <div id="holidayCalendar" class="calendar"></div>
+    <div class="legend"><span><i class="dot h"></i>法定休息日</span><span>点击日期切换</span></div>
+    <div class="actions"><button class="btn" id="back1">上一步</button><div class="right"><button class="btn primary" id="next2">下一步：值班日期</button></div></div>
+  </section>
+
+  <section id="step3" class="card hidden">
+    <div class="row between"><div><div class="section-title">值班日期</div><div class="hint">默认周一、周二、周三、周五、周六为值班日。点击日历中的日期即可切换“值班日 / 非值班日”。法定休息日会同时标记，方便核对。</div></div><div class="small" id="dutyDateCount"></div></div>
+    <div id="dutyCalendar" class="calendar"></div>
+    <div class="legend"><span><i class="dot d"></i>值班日</span><span><i class="dot h"></i>法定休息日</span><span>点击日期切换</span></div>
+    <div class="actions"><button class="btn" id="back2">上一步</button><div class="right"><button class="btn primary" id="next3">下一步：人员与1号班次</button></div></div>
+  </section>
+
+  <section id="step4" class="card hidden">
+    <div class="section-title">人员配置</div>
+    <div class="hint">默认前三人为老鸟、后两人为新人。可自由增删改；值班顺序按各组当前排列。排班逻辑会根据人数自动调整。</div>
+    <div class="people-grid" style="margin-top:12px">
+      <div class="people-col"><div class="row between"><b>老鸟</b><button class="btn" id="addOld">+ 添加</button></div><div id="oldList"></div></div>
+      <div class="people-col"><div class="row between"><b>新人</b><button class="btn" id="addNew">+ 添加</button></div><div id="newList"></div></div>
+    </div>
+    <div class="card" style="margin-top:14px;margin-bottom:0;background:#fafcff">
+      <div class="row between"><div><div class="section-title">当月1号班次（手动输入）</div><div class="hint">1号可能受到上月值班的跨月影响，因此1号不由算法猜测。只有当1号本身属于值班日时，所选值班人员才需要与1号“值班”一致；若1号是“下夜”，算法会让该人员2号自动休息。</div></div><div class="field"><label>当月第一个值班日的值班人员</label><select id="firstDuty"></select></div></div>
+      <div class="firstday matrix-wrap" style="margin-top:10px"><table><thead><tr><th>人员</th><th>类型</th></tr></thead><tbody id="firstDayBody"></tbody></table></div>
+    </div>
+    <div id="precheck"></div>
+    <div class="actions"><button class="btn" id="back3">上一步</button><div class="right"><button class="btn primary" id="generateBtn">生成整月排班</button></div></div>
+  </section>
+
+  <section id="step5" class="card hidden">
+    <div class="row between"><div><div class="section-title">排班结果</div><div class="hint" id="resultHint"></div></div><div class="row"><button class="btn" id="downloadBtn">下载Excel</button><button class="btn" id="downloadCsvBtn">下载CSV</button><button class="btn" id="copyBtn">复制CSV</button><button class="btn primary" id="againBtn">重新排一次</button></div></div>
+    <div id="resultAlert"></div><div id="summary" class="summary"></div><div class="matrix-wrap"><table id="resultTable" class="matrix"></table></div>
+    <div class="footer-note">说明：工具只在当前页面内计算，不向服务器发送数据，也不会自动保存到浏览器。刷新/关闭页面后配置会消失。</div>
+  </section>
+</div>
+<script>
+const SHIFT = {D:'值班', W:'白班', N:'下夜', R:'休息'};
+const DEFAULT_OLDS = ['杨梨云','鲜双双','赵婷'];
+const DEFAULT_NEWS = ['吴美泽','李龙'];
+let state = {month:'', days:[], holidays:new Set(), dutyDates:new Set(), olds:[...DEFAULT_OLDS], news:[...DEFAULT_NEWS], firstDuty:'', firstDay:{}, result:null};
+
+const $ = id => document.getElementById(id);
+function pad(n){return String(n).padStart(2,'0')}
+function keyDate(y,m,d){return `${y}-${pad(m)}-${pad(d)}`}
+function fmtDate(ds){const d=new Date(ds+'T00:00:00'); return `${d.getMonth()+1}/${d.getDate()} 周${['日','一','二','三','四','五','六'][d.getDay()]}`}
+function daysInMonth(y,m){return new Date(y,m,0).getDate()}
+function weekday(ds){return new Date(ds+'T00:00:00').getDay()}
+function allPeople(){return [...state.olds,...state.news]}
+function isOld(name){return state.olds.includes(name)}
+function showStep(n){for(let i=1;i<=5;i++){$(`step${i}`).classList.toggle('hidden',i!==n);document.querySelector(`.step[data-step="${i}"]`).classList.toggle('active',i===n);document.querySelector(`.step[data-step="${i}"]`).classList.toggle('done',i<n)}}
+
+function initMonth(){
+  const now=new Date(); const y=now.getFullYear(),m=now.getMonth()+1; $('monthInput').value=`${y}-${pad(m)}`;
+}
+function buildDays(){
+  const [y,m]=state.month.split('-').map(Number); const n=daysInMonth(y,m); state.days=[];
+  for(let d=1;d<=n;d++) state.days.push(keyDate(y,m,d));
+}
+function initHolidays(){state.holidays=new Set(state.days.filter(ds=>[0,6].includes(weekday(ds))));}
+function initDutyDates(){state.dutyDates=new Set(state.days.filter(ds=>[1,2,3,5,6].includes(weekday(ds))));}
+function renderHolidayCalendar(){
+  const c=$('holidayCalendar'); c.innerHTML=''; const [y,m]=state.month.split('-').map(Number); const first=new Date(y,m-1,1).getDay();
+  ['日','一','二','三','四','五','六'].forEach(x=>{const e=document.createElement('div');e.className='dow';e.textContent=x;c.appendChild(e)});
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='day blank';c.appendChild(e)}
+  state.days.forEach(ds=>{const d=new Date(ds+'T00:00:00').getDate();const e=document.createElement('div');e.className='day'+(state.holidays.has(ds)?' holiday':'');e.innerHTML=`<div class="num">${d}</div><small>${state.holidays.has(ds)?'法定休息':'工作日'}</small>`;e.onclick=()=>{if(state.holidays.has(ds))state.holidays.delete(ds);else state.holidays.add(ds);renderHolidayCalendar()};c.appendChild(e)});
+  $('holidayCount').textContent=`共 ${state.holidays.size} 天法定休息日`;
+}
+function renderDutyCalendar(){
+  const c=$('dutyCalendar'); c.innerHTML='';
+  const [y,m]=state.month.split('-').map(Number); const first=new Date(y,m-1,1).getDay();
+  ['日','一','二','三','四','五','六'].forEach(x=>{const e=document.createElement('div');e.className='dow';e.textContent=x;c.appendChild(e)});
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='day blank';c.appendChild(e)}
+  state.days.forEach(ds=>{
+    const d=new Date(ds+'T00:00:00').getDate();
+    const duty=state.dutyDates.has(ds), holiday=state.holidays.has(ds);
+    const e=document.createElement('div');
+    e.className='day'+(holiday?' holiday':'')+(duty?' duty-date':'');
+    e.innerHTML=`<div class="num">${d}</div><small>${duty?'值班日':'非值班日'}${holiday?' · 法定休息':''}</small>`;
+    e.onclick=()=>{if(state.dutyDates.has(ds))state.dutyDates.delete(ds);else state.dutyDates.add(ds);renderDutyCalendar()};
+    c.appendChild(e);
+  });
+  $('dutyDateCount').textContent=`共 ${state.dutyDates.size} 个值班日`;
+}
+
+function renderPeople(){
+  renderPeopleGroup('oldList','olds'); renderPeopleGroup('newList','news');
+  const names=allPeople(); if(!names.includes(state.firstDuty)) state.firstDuty=names[0]||'';
+  $('firstDuty').innerHTML=names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join(''); $('firstDuty').value=state.firstDuty; $('firstDuty').onchange=e=>{state.firstDuty=e.target.value;updatePrecheck()};
+  renderFirstDay();
+}
+function renderPeopleGroup(container,key){const c=$(container);c.innerHTML=''; state[key].forEach((name,i)=>{const row=document.createElement('div');row.className='person-row';row.innerHTML=`<span class="tag">${i+1}.</span><input type="text" value="${esc(name)}"><button class="btn danger">删除</button>`;const inp=row.querySelector('input');inp.onchange=()=>{state[key][i]=inp.value.trim()||`未命名${i+1}`;renderPeople();};row.querySelector('button').onclick=()=>{state[key].splice(i,1);renderPeople();};c.appendChild(row)})}
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+function addPerson(key){state[key].push(key==='olds'?`老鸟${state[key].length+1}`:`新人${state[key].length+1}`);renderPeople()}
+function renderFirstDay(){
+  const body=$('firstDayBody');body.innerHTML=''; allPeople().forEach(n=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(n)}</td><td><select data-name="${esc(n)}"><option value="">请选择</option><option value="D">值班</option><option value="W">白班</option><option value="N">下夜</option><option value="R">休息</option></select></td>`;const s=tr.querySelector('select');s.value=state.firstDay[n]||'';s.onchange=()=>{state.firstDay[n]=s.value;updatePrecheck()};body.appendChild(tr)})
+}
+function syncFirstDay(){renderFirstDay();const s=$('firstDuty');if(s) s.value=state.firstDuty;}
+function updatePrecheck(){
+  const names=allPeople();const msgs=[]; if(names.length===0)msgs.push(['error','至少需要1名人员。']);
+  if(!state.firstDuty || !names.includes(state.firstDuty))msgs.push(['error','请先选择当月第一个值班日的值班人员。']);
+  names.forEach(n=>{if(!state.firstDay[n])msgs.push(['warn',`请填写${n}的1号班次。`])});
+  if(state.firstDuty && state.firstDay[state.firstDuty] && state.firstDay[state.firstDuty]!=='D')msgs.push(['error',`1号第一个值班人员“${state.firstDuty}”的1号班次必须是“值班”。`]);
+  // uniqueness
+  if(Object.values(state.firstDay).filter(x=>x==='D').length>1)msgs.push(['error','1号只能有1名值班人员。']);
+  if(Object.keys(state.firstDay).length===names.length && names.length && !Object.values(state.firstDay).includes('D'))msgs.push(['error','1号必须有1名值班人员。']);
+  $('precheck').innerHTML=msgs.length?msgs.map(x=>`<div class="alert ${x[0]}">${x[1]}</div>`).join(''):'<div class="alert info">配置检查通过后即可生成。</div>';
+  return !msgs.some(x=>x[0]==='error');
+}
+
+function buildDutySequence(){
+  const old=state.olds, nw=state.news;
+  if(!old.length && !nw.length) return [];
+  const rounds=[]; const target=state.days.filter(d=>state.dutyDates.has(d)).length;
+  if(!target)return [];
+  // Canonical pattern: all oldbirds once, then one newcomer; newcomer rotates by round.
+  let maxRounds=Math.max(2,target+2); for(let r=0;r<maxRounds;r++){old.forEach(x=>rounds.push(x));if(nw.length)rounds.push(nw[r%nw.length])}
+  const names=allPeople(); let start=rounds.indexOf(state.firstDuty); if(start<0) start=0;
+  const seq=[]; for(let i=0;i<target;i++) seq.push(rounds[(start+i)%rounds.length]); return seq;
+}
+function fixedByDuty(){
+  const dutyDays=[...state.days].filter(d=>state.dutyDates.has(d)); const seq=buildDutySequence(); const fixed={};
+  state.days.forEach(ds=>fixed[ds]={});
+  dutyDays.forEach((ds,i)=>{const p=seq[i]; if(!p)return; fixed[ds][p]='D'; const idx=state.days.indexOf(ds); if(idx+1<state.days.length && !fixed[state.days[idx+1]][p]) fixed[state.days[idx+1]][p]='N'; if(idx+2<state.days.length && !fixed[state.days[idx+2]][p]) fixed[state.days[idx+2]][p]='R';});
+  // Day 1 is fully manual and may carry over an unknown duty from the previous month.
+  const first=state.days[0]; allPeople().forEach(p=>{if(state.firstDay[p]) fixed[first][p]=state.firstDay[p]});
+  // Carry forward the known consequence of the manual day-1 status.
+  allPeople().forEach(p=>{
+    const x=state.firstDay[p];
+    if(x==='D'){
+      if(state.days[1] && !fixed[state.days[1]][p]) fixed[state.days[1]][p]='N';
+      if(state.days[2] && !fixed[state.days[2]][p]) fixed[state.days[2]][p]='R';
+    }else if(x==='N'){
+      if(state.days[1] && !fixed[state.days[1]][p]) fixed[state.days[1]][p]='R';
+    }
+  });
+  return fixed;
+}
+function validateStatic(fixed){
+  const issues=[]; const names=allPeople(); const first=state.days[0];
+  // A person cannot be duty in the two following days by another scheduled duty.
+  state.days.forEach((ds,idx)=>{const p=Object.entries(fixed[ds]).find(([,v])=>v==='D')?.[0]; if(p){for(const j of [idx+1,idx+2]) if(j<state.days.length && fixed[state.days[j]][p]==='D') issues.push(`${fmtDate(ds)} ${p}后两天内又被排值班`);}})
+  // Manual first day cannot contradict automatically deduced day 1 duty unless it is itself the only manual override.
+  const duty1=Object.entries(fixed[first]).find(([,v])=>v==='D')?.[0]; if(state.dutyDates.has(first) && duty1 && duty1!==state.firstDuty)issues.push(`1号值班人员与“当月第一个值班日的值班人员”不一致`); if(state.dutyDates.has(first) && !duty1)issues.push('1号是值班日，但没有有效的值班人员');
+  names.forEach(p=>{let r=0;state.days.forEach(ds=>{if(fixed[ds][p]==='R')r++});if(r>state.holidays.size)issues.push(`${p}的固定“休息”已有${r}天，超过当月法定休息日${state.holidays.size}天`)});
+  return issues;
+}
+
+// Dynamic programming over days and each person's exact rest count.
+// State = rest counts packed in mixed radix. Score is lexicographic by using large weights:
+// 1) maximize rest on statutory holidays; 2) maximize white shifts on Mon/Tue/Fri; 3) maximize white shifts on Wed/Thu.
+function solve(){
+  const names=allPeople(); const P=names.length, H=state.holidays.size; if(P===0)throw new Error('没有人员');
+  const fixed=fixedByDuty(); const staticIssues=validateStatic(fixed); if(staticIssues.length)throw new Error(staticIssues.join('；'));
+  const rad=Array(P).fill(H+1); const mult=Array(P).fill(1); for(let i=1;i<P;i++) mult[i]=mult[i-1]*rad[i-1];
+  const totalStates=mult[P-1]*rad[P-1]; if(totalStates>3000000)throw new Error('人员数量过多或法定休息日过多，当前浏览器不建议计算。');
+  const zero=0; let cur=new Map([[zero,{score:0,path:null,mask:null}]]); const layers=[];
+  const dutyDays=state.days.filter(d=>state.dutyDates.has(d));
+  const fixedType=(ds,p)=>fixed[ds]&&fixed[ds][p];
+  for(let di=0;di<state.days.length;di++){
+    const ds=state.days[di], wd=weekday(ds), holiday=state.holidays.has(ds); const minWhite = holiday ? ( (fixed[ds] && Object.entries(fixed[ds]).find(([,v])=>v==='D') && isOld(Object.entries(fixed[ds]).find(([,v])=>v==='D')[0])) ? 0 : 1) : ([1,2,5].includes(wd)?2:([3,4].includes(wd)?1:0));
+    const opts=[]; function rec(i,adds,white,oldWhite){
+      if(i===P){
+        if(white<minWhite) return;
+        const dutyName=Object.entries(fixed[ds]).find(([,v])=>v==='D')?.[0]; if(holiday && dutyName && !isOld(dutyName) && oldWhite<1)return;
+        opts.push({adds:adds.slice(),white});return;
+      }
+      const fx=fixedType(ds,names[i]); if(fx){if(fx==='R')adds[i]=1;else adds[i]=0; rec(i+1,adds,white+(fx==='W'?1:0),oldWhite+(fx==='W'&&isOld(names[i])?1:0));return}
+      adds[i]=0; rec(i+1,adds,white+1,oldWhite+(isOld(names[i])?1:0));
+      adds[i]=1; rec(i+1,adds,white,oldWhite);
+    }
+    rec(0,Array(P).fill(0),0,0);
+    const next=new Map();
+    for(const [code,entry] of cur){
+      for(const o of opts){
+        let nc=code,ok=true;
+        for(let i=0;i<P;i++){
+          const c=Math.floor(nc/mult[i])%(H+1); const n=c+o.adds[i];
+          if(n>H){ok=false;break}
+          if(o.adds[i])nc+=mult[i];
+        }
+        if(!ok)continue;
+        // Score: holiday rest overwhelmingly preferred, then target weekday white, then Wed/Thu white.
+        let hrest=0,tw=0,mw=0;
+        for(let i=0;i<P;i++) if(o.adds[i]===1){if(holiday)hrest++} else {if([1,2,5].includes(wd))tw++; if([3,4].includes(wd))mw++}
+        const score=entry.score + hrest*100000 + tw*100 + mw;
+        const old=next.get(nc); if(!old||score>old.score)next.set(nc,{score,path:entry,mask:o.adds.slice()});
+      }
+    }
+    if(!next.size) throw new Error(`${fmtDate(ds)}附近无法同时满足“白班下限 + 固定下夜/休息 + 每人休息天数=${H}天”。请检查节假日、值班日或1号班次配置。`);
+    layers.push(next);cur=next;
+  }
+  const targetCode=H*mult.reduce((a,_,i)=>a+0,0); let code=0;for(let i=0;i<P;i++)code+=H*mult[i]; const end=cur.get(code);if(!end)throw new Error(`找不到满足每人恰好${H}天休息的完整排班。可能是固定下夜/休息与休息日数量冲突。`);
+  const byDay=Array(state.days.length); let node=end; for(let di=state.days.length-1;di>=0;di--){byDay[di]=node.mask;node=node.path}
+  const result={};state.days.forEach((ds,di)=>{result[ds]={};for(let i=0;i<P;i++){const fx=fixed[ds][names[i]];result[ds][names[i]]=fx|| (byDay[di][i]===1?'R':'W')}});
+  return result;
+}
+
+function generate(){
+  if(!updatePrecheck())return;
+  // Re-check name uniqueness.
+  const names=allPeople();const dup=names.filter((n,i)=>names.indexOf(n)!==i); if(dup.length){$('precheck').innerHTML=`<div class="alert error">人员姓名不能重复：${esc([...new Set(dup)].join('、'))}</div>`;return}
+  try{state.result=solve();renderResult();showStep(5)}catch(e){$('precheck').innerHTML=`<div class="alert error">${esc(e.message)}</div>`}
+}
+function renderResult(){
+  const names=allPeople(); const res=state.result; $('resultHint').textContent=`${state.month} · ${state.days.length}天 · 法定休息日${state.holidays.size}天 · 值班日${state.dutyDates.size}天`;
+  $('resultAlert').innerHTML='<div class="alert ok">排班生成成功。结果只存在于当前页面，点击“下载Excel”可将带表格样式的完整排班表保存到手机本地，也可下载CSV。</div>';
+  const sm=$('summary');sm.innerHTML='';names.forEach(p=>{let r=0,d=0,n=0,w=0;state.days.forEach(ds=>{const x=res[ds][p];if(x==='R')r++;if(x==='D')d++;if(x==='N')n++;if(x==='W')w++});const e=document.createElement('div');e.className='stat';e.innerHTML=`<b>${p}</b><span>值班 ${d} · 白班 ${w} · 下夜 ${n} · 休息 ${r}</span>`;sm.appendChild(e)})
+  const t=$('resultTable');
+  let h='<thead><tr><th>人员</th>';
+  state.days.forEach(ds=>h+=`<th>${fmtDate(ds)}</th>`);
+  h+='</tr></thead><tbody>';
+  names.forEach(p=>{
+    h+=`<tr><td><b>${esc(p)}</b></td>`;
+    state.days.forEach(ds=>{
+      const x=res[ds][p];
+      h+=`<td class="${x==='D'?'cell-duty':x==='N'?'cell-night':x==='R'?'cell-rest':'cell-white'}">${SHIFT[x]}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody>';
+  t.innerHTML=h;
+}
+function resultCSV(){const names=allPeople();let lines=[['日期',...names].join(',')];state.days.forEach(ds=>lines.push([fmtDate(ds),...names.map(p=>SHIFT[state.result[ds][p]])].map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')));return '\ufeff'+lines.join('\n')}
+
+$('startBtn').onclick=()=>{const v=$('monthInput').value;if(!v){alert('请选择月份');return}state.month=v;buildDays();initHolidays();initDutyDates();state.firstDay={};state.result=null;renderHolidayCalendar();showStep(2)};
+$('back1').onclick=()=>showStep(1);$('back2').onclick=()=>{renderHolidayCalendar();showStep(2)};$('back3').onclick=()=>{renderDutyCalendar();showStep(3)};$('next2').onclick=()=>{renderDutyCalendar();showStep(3)};$('next3').onclick=()=>{renderPeople();showStep(4);updatePrecheck()};$('addOld').onclick=()=>addPerson('olds');$('addNew').onclick=()=>addPerson('news');$('generateBtn').onclick=generate;
+$('downloadBtn').onclick=()=>{const blob=new Blob([resultCSV()],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`排班表_${state.month}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(resultCSV());alert('已复制CSV排班结果。')}catch(e){const ta=document.createElement('textarea');ta.value=resultCSV();document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('已复制。')}};
+$('restartBtn').onclick=$('againBtn').onclick=()=>{state={month:'',days:[],holidays:new Set(),dutyDates:new Set(),olds:[...DEFAULT_OLDS],news:[...DEFAULT_NEWS],firstDuty:'',firstDay:{},result:null};initMonth();showStep(1)};
+initMonth();
+</script>
+</body>
+</html>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+}
+</script>
