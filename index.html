@@ -62,13 +62,13 @@
 
   <section id="step4" class="card hidden">
     <div class="section-title">人员配置</div>
-    <div class="hint">默认前三人为老鸟、后两人为新人。可自由增删改；值班顺序按各组当前排列。排班逻辑会根据人数自动调整。</div>
+    <div class="hint">默认前三人为老鸟、后两人为新人。可自由增删改；值班顺序按各组当前排列。先选择“当月第一个实际值班日”的值班人员，无论1号是否为值班日都需要选择。</div>
     <div class="people-grid" style="margin-top:12px">
       <div class="people-col"><div class="row between"><b>老鸟</b><button class="btn" id="addOld">+ 添加</button></div><div id="oldList"></div></div>
       <div class="people-col"><div class="row between"><b>新人</b><button class="btn" id="addNew">+ 添加</button></div><div id="newList"></div></div>
     </div>
     <div class="card" style="margin-top:14px;margin-bottom:0;background:#fafcff">
-      <div class="row between"><div><div class="section-title">当月1号班次（手动输入）</div><div class="hint">1号可能受到上月值班的跨月影响，因此1号不由算法猜测。只有当1号本身属于值班日时，所选值班人员才需要与1号“值班”一致；若1号是“下夜”，算法会让该人员2号自动休息。</div></div><div class="field"><label>当月第一个值班日的值班人员</label><select id="firstDuty"></select></div></div>
+      <div class="row between"><div><div class="section-title">当月1号班次（手动输入）</div><div class="hint">1号可能受到上月值班的跨月影响，因此1号不由算法猜测。1号不允许手动选择“值班”。如果1号是值班日，已选的当月首个值班人员会自动固定为“值班”且不出现在下面的手动选择中；如果1号不是值班日，则下面显示全部人员，但班次选择中仍不包含“值班”。</div></div><div class="field" id="firstDutyField"><label>当月第一个值班日的值班人员</label><select id="firstDuty"></select></div></div>
       <div class="firstday matrix-wrap" style="margin-top:10px"><table><thead><tr><th>人员</th><th>类型</th></tr></thead><tbody id="firstDayBody"></tbody></table></div>
     </div>
     <div id="precheck"></div>
@@ -132,25 +132,59 @@ function renderDutyCalendar(){
 
 function renderPeople(){
   renderPeopleGroup('oldList','olds'); renderPeopleGroup('newList','news');
-  const names=allPeople(); if(!names.includes(state.firstDuty)) state.firstDuty=names[0]||'';
-  $('firstDuty').innerHTML=names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join(''); $('firstDuty').value=state.firstDuty; $('firstDuty').onchange=e=>{state.firstDuty=e.target.value;updatePrecheck()};
+  const names=allPeople();
+  // Always choose the person who takes the month's first actual duty date,
+  // even when day 1 itself is not a duty day.
+  $('firstDutyField').classList.remove('hidden');
+  $('firstDuty').innerHTML=`<option value="">请选择</option>` + names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  $('firstDuty').value=names.includes(state.firstDuty) ? state.firstDuty : '';
+  $('firstDuty').onchange=e=>{
+    state.firstDuty=e.target.value;
+    renderFirstDay();
+    updatePrecheck();
+  };
   renderFirstDay();
 }
 function renderPeopleGroup(container,key){const c=$(container);c.innerHTML=''; state[key].forEach((name,i)=>{const row=document.createElement('div');row.className='person-row';row.innerHTML=`<span class="tag">${i+1}.</span><input type="text" value="${esc(name)}"><button class="btn danger">删除</button>`;const inp=row.querySelector('input');inp.onchange=()=>{state[key][i]=inp.value.trim()||`未命名${i+1}`;renderPeople();};row.querySelector('button').onclick=()=>{state[key].splice(i,1);renderPeople();};c.appendChild(row)})}
 function esc(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 function addPerson(key){state[key].push(key==='olds'?`老鸟${state[key].length+1}`:`新人${state[key].length+1}`);renderPeople()}
 function renderFirstDay(){
-  const body=$('firstDayBody');body.innerHTML=''; allPeople().forEach(n=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${esc(n)}</td><td><select data-name="${esc(n)}"><option value="">请选择</option><option value="D">值班</option><option value="W">白班</option><option value="N">下夜</option><option value="R">休息</option></select></td>`;const s=tr.querySelector('select');s.value=state.firstDay[n]||'';s.onchange=()=>{state.firstDay[n]=s.value;updatePrecheck()};body.appendChild(tr)})
+  const body=$('firstDayBody'); body.innerHTML='';
+  const names=allPeople();
+  const firstIsDuty=state.days.length>0 && state.dutyDates.has(state.days[0]);
+  names.forEach(n=>{
+    // When day 1 is a duty day, the selected first-duty person is fixed as D
+    // and is intentionally omitted from manual day-1 inputs.
+    if(firstIsDuty && n===state.firstDuty){
+      state.firstDay[n]='D';
+      return;
+    }
+    // Manual day-1 choices never include duty.
+    if(state.firstDay[n]==='D') delete state.firstDay[n];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(n)}</td><td><select data-name="${esc(n)}"><option value="">请选择</option><option value="W">白班</option><option value="N">下夜</option><option value="R">休息</option></select></td>`;
+    const sel=tr.querySelector('select');
+    sel.value=(state.firstDay[n] && state.firstDay[n]!=='D') ? state.firstDay[n] : '';
+    sel.onchange=()=>{state.firstDay[n]=sel.value; updatePrecheck()};
+    body.appendChild(tr);
+  });
 }
 function syncFirstDay(){renderFirstDay();const s=$('firstDuty');if(s) s.value=state.firstDuty;}
 function updatePrecheck(){
-  const names=allPeople();const msgs=[]; if(names.length===0)msgs.push(['error','至少需要1名人员。']);
-  if(!state.firstDuty || !names.includes(state.firstDuty))msgs.push(['error','请先选择当月第一个值班日的值班人员。']);
-  names.forEach(n=>{if(!state.firstDay[n])msgs.push(['warn',`请填写${n}的1号班次。`])});
-  if(state.firstDuty && state.firstDay[state.firstDuty] && state.firstDay[state.firstDuty]!=='D')msgs.push(['error',`1号第一个值班人员“${state.firstDuty}”的1号班次必须是“值班”。`]);
-  // uniqueness
-  if(Object.values(state.firstDay).filter(x=>x==='D').length>1)msgs.push(['error','1号只能有1名值班人员。']);
-  if(Object.keys(state.firstDay).length===names.length && names.length && !Object.values(state.firstDay).includes('D'))msgs.push(['error','1号必须有1名值班人员。']);
+  const names=allPeople(); const msgs=[];
+  const first=state.days[0]; const firstIsDuty=!!first && state.dutyDates.has(first);
+  if(names.length===0)msgs.push(['error','至少需要1名人员。']);
+  if(state.dutyDates.size===0 && state.days.length>0)msgs.push(['error','当月至少需要1个值班日。']);
+
+  // Always require the user to choose the person assigned to the first actual duty date.
+  if(!state.firstDuty || !names.includes(state.firstDuty)) msgs.push(['error','请先选择当月第一个实际值班日的值班人员。']);
+
+  // Day 1 never allows manual duty. If day 1 is a duty day, the selected first-duty person is fixed as D and omitted.
+  const manualNames=firstIsDuty ? names.filter(n=>n!==state.firstDuty) : names;
+  manualNames.forEach(n=>{if(!state.firstDay[n])msgs.push(['warn',`请填写${n}的1号班次。`]);});
+  if(firstIsDuty && state.firstDuty) state.firstDay[state.firstDuty]='D';
+  manualNames.forEach(n=>{if(state.firstDay[n]==='D') delete state.firstDay[n];});
+
   $('precheck').innerHTML=msgs.length?msgs.map(x=>`<div class="alert ${x[0]}">${x[1]}</div>`).join(''):'<div class="alert info">配置检查通过后即可生成。</div>';
   return !msgs.some(x=>x[0]==='error');
 }
@@ -162,7 +196,10 @@ function buildDutySequence(){
   if(!target)return [];
   // Canonical pattern: all oldbirds once, then one newcomer; newcomer rotates by round.
   let maxRounds=Math.max(2,target+2); for(let r=0;r<maxRounds;r++){old.forEach(x=>rounds.push(x));if(nw.length)rounds.push(nw[r%nw.length])}
-  const names=allPeople(); let start=rounds.indexOf(state.firstDuty); if(start<0) start=0;
+  // The selected person always anchors the month's first actual duty date,
+  // regardless of whether day 1 itself is a duty day.
+  let start=state.firstDuty?rounds.indexOf(state.firstDuty):-1;
+  if(start<0) start=0;
   const seq=[]; for(let i=0;i<target;i++) seq.push(rounds[(start+i)%rounds.length]); return seq;
 }
 function fixedByDuty(){
@@ -187,8 +224,15 @@ function validateStatic(fixed){
   const issues=[]; const names=allPeople(); const first=state.days[0];
   // A person cannot be duty in the two following days by another scheduled duty.
   state.days.forEach((ds,idx)=>{const p=Object.entries(fixed[ds]).find(([,v])=>v==='D')?.[0]; if(p){for(const j of [idx+1,idx+2]) if(j<state.days.length && fixed[state.days[j]][p]==='D') issues.push(`${fmtDate(ds)} ${p}后两天内又被排值班`);}})
-  // Manual first day cannot contradict automatically deduced day 1 duty unless it is itself the only manual override.
-  const duty1=Object.entries(fixed[first]).find(([,v])=>v==='D')?.[0]; if(state.dutyDates.has(first) && duty1 && duty1!==state.firstDuty)issues.push(`1号值班人员与“当月第一个值班日的值班人员”不一致`); if(state.dutyDates.has(first) && !duty1)issues.push('1号是值班日，但没有有效的值班人员');
+  // Day 1 duty is handled only by the selected first-duty person; manual inputs cannot contain D.
+  const duty1=Object.entries(fixed[first]).find(([,v])=>v==='D')?.[0];
+  if(state.dutyDates.has(first)){
+    if(!state.firstDuty) issues.push('1号是值班日，但没有选择第一个值班人员');
+    if(duty1 && duty1!==state.firstDuty)issues.push(`1号值班人员与“当月第一个值班日的值班人员”不一致`);
+    if(!duty1)issues.push('1号是值班日，但没有有效的值班人员');
+  }else if(duty1){
+    issues.push('1号不是值班日，但存在“值班”班次');
+  }
   names.forEach(p=>{let r=0;state.days.forEach(ds=>{if(fixed[ds][p]==='R')r++});if(r>state.holidays.size)issues.push(`${p}的固定“休息”已有${r}天，超过当月法定休息日${state.holidays.size}天`)});
   return issues;
 }
@@ -205,7 +249,7 @@ function solve(){
   const dutyDays=state.days.filter(d=>state.dutyDates.has(d));
   const fixedType=(ds,p)=>fixed[ds]&&fixed[ds][p];
   for(let di=0;di<state.days.length;di++){
-    const ds=state.days[di], wd=weekday(ds), holiday=state.holidays.has(ds); const minWhite = holiday ? ( (fixed[ds] && Object.entries(fixed[ds]).find(([,v])=>v==='D') && isOld(Object.entries(fixed[ds]).find(([,v])=>v==='D')[0])) ? 0 : 1) : ([1,2,5].includes(wd)?2:([3,4].includes(wd)?1:0));
+    const ds=state.days[di], wd=weekday(ds), holiday=state.holidays.has(ds); const minWhite = holiday ? ( (fixed[ds] && Object.entries(fixed[ds]).find(([,v])=>v==='D') && isOld(Object.entries(fixed[ds]).find(([,v])=>v==='D')[0])) ? 0 : 1) : ([1,2,5].includes(wd)?2:([3,4].includes(wd)?2:0));
     const opts=[]; function rec(i,adds,white,oldWhite){
       if(i===P){
         if(white<minWhite) return;
@@ -270,7 +314,7 @@ function renderResult(){
 }
 function resultCSV(){const names=allPeople();let lines=[['日期',...names].join(',')];state.days.forEach(ds=>lines.push([fmtDate(ds),...names.map(p=>SHIFT[state.result[ds][p]])].map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')));return '\ufeff'+lines.join('\n')}
 
-$('startBtn').onclick=()=>{const v=$('monthInput').value;if(!v){alert('请选择月份');return}state.month=v;buildDays();initHolidays();initDutyDates();state.firstDay={};state.result=null;renderHolidayCalendar();showStep(2)};
+$('startBtn').onclick=()=>{const v=$('monthInput').value;if(!v){alert('请选择月份');return}state.month=v;buildDays();initHolidays();initDutyDates();state.firstDay={};state.firstDuty='';state.result=null;renderHolidayCalendar();showStep(2)};
 $('back1').onclick=()=>showStep(1);$('back2').onclick=()=>{renderHolidayCalendar();showStep(2)};$('back3').onclick=()=>{renderDutyCalendar();showStep(3)};$('next2').onclick=()=>{renderDutyCalendar();showStep(3)};$('next3').onclick=()=>{renderPeople();showStep(4);updatePrecheck()};$('addOld').onclick=()=>addPerson('olds');$('addNew').onclick=()=>addPerson('news');$('generateBtn').onclick=generate;
 $('downloadBtn').onclick=()=>{const blob=new Blob([resultCSV()],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`排班表_${state.month}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(resultCSV());alert('已复制CSV排班结果。')}catch(e){const ta=document.createElement('textarea');ta.value=resultCSV();document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('已复制。')}};
