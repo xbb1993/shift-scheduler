@@ -62,46 +62,63 @@ function showStep(n){
 
 function initMonth(){
   const now = new Date();
+
   const y = now.getFullYear();
   const m = now.getMonth()+1;
 
-  $('monthInput').value = `${y}-${pad(m)}`;
+  $('monthInput').value =
+    `${y}-${pad(m)}`;
 }
 
 function buildDays(){
-  const [y,m] = state.month.split('-').map(Number);
+  const [y,m] =
+    state.month.split('-').map(Number);
 
   const n = daysInMonth(y,m);
 
   state.days = [];
 
-  for(let d=1; d<=n; d++){
-    state.days.push(keyDate(y,m,d));
+  for(let d=1;d<=n;d++){
+    state.days.push(
+      keyDate(y,m,d)
+    );
   }
 }
 
 function initHolidays(){
-  state.holidays = new Set(
-    state.days.filter(ds => [0,6].includes(weekday(ds)))
-  );
+  state.holidays =
+    new Set(
+      state.days.filter(
+        ds => [0,6].includes(weekday(ds))
+      )
+    );
 }
 
 function initDutyDates(){
-  state.dutyDates = new Set(
-    state.days.filter(ds => [1,2,3,5,6].includes(weekday(ds)))
-  );
+  state.dutyDates =
+    new Set(
+      state.days.filter(
+        ds => [1,2,3,5,6].includes(weekday(ds))
+      )
+    );
 }
 
 function renderHolidayCalendar(){
+
   const c = $('holidayCalendar');
 
   c.innerHTML = '';
 
-  const [y,m] = state.month.split('-').map(Number);
-  const first = new Date(y,m-1,1).getDay();
+  const [y,m] =
+    state.month.split('-').map(Number);
+
+  const first =
+    new Date(y,m-1,1).getDay();
 
   ['日','一','二','三','四','五','六'].forEach(x => {
-    const e = document.createElement('div');
+
+    const e =
+      document.createElement('div');
 
     e.className = 'dow';
     e.textContent = x;
@@ -110,7 +127,9 @@ function renderHolidayCalendar(){
   });
 
   for(let i=0;i<first;i++){
-    const e = document.createElement('div');
+
+    const e =
+      document.createElement('div');
 
     e.className = 'day blank';
 
@@ -118,19 +137,31 @@ function renderHolidayCalendar(){
   }
 
   state.days.forEach(ds => {
-    const d = new Date(ds+'T00:00:00').getDate();
 
-    const e = document.createElement('div');
+    const d =
+      new Date(ds+'T00:00:00').getDate();
+
+    const e =
+      document.createElement('div');
 
     e.className =
       'day' +
-      (state.holidays.has(ds) ? ' holiday' : '');
+      (
+        state.holidays.has(ds)
+          ? ' holiday'
+          : ''
+      );
 
     e.innerHTML =
       `<div class="num">${d}</div>` +
-      `<small>${state.holidays.has(ds) ? '法定休息' : '工作日'}</small>`;
+      `<small>${
+        state.holidays.has(ds)
+          ? '法定休息'
+          : '工作日'
+      }</small>`;
 
     e.onclick = () => {
+
       if(state.holidays.has(ds)){
         state.holidays.delete(ds);
       }else{
@@ -148,15 +179,21 @@ function renderHolidayCalendar(){
 }
 
 function renderDutyCalendar(){
+
   const c = $('dutyCalendar');
 
   c.innerHTML = '';
 
-  const [y,m] = state.month.split('-').map(Number);
-  const first = new Date(y,m-1,1).getDay();
+  const [y,m] =
+    state.month.split('-').map(Number);
+
+  const first =
+    new Date(y,m-1,1).getDay();
 
   ['日','一','二','三','四','五','六'].forEach(x => {
-    const e = document.createElement('div');
+
+    const e =
+      document.createElement('div');
 
     e.className = 'dow';
     e.textContent = x;
@@ -165,20 +202,29 @@ function renderDutyCalendar(){
   });
 
   for(let i=0;i<first;i++){
-    const e = document.createElement('div');
 
-    e.className = 'day blank';
+    const e =
+      document.createElement('div');
+
+    e.className =
+      'day blank';
 
     c.appendChild(e);
   }
 
   state.days.forEach(ds => {
-    const d = new Date(ds+'T00:00:00').getDate();
 
-    const duty = state.dutyDates.has(ds);
-    const holiday = state.holidays.has(ds);
+    const d =
+      new Date(ds+'T00:00:00').getDate();
 
-    const e = document.createElement('div');
+    const duty =
+      state.dutyDates.has(ds);
+
+    const holiday =
+      state.holidays.has(ds);
+
+    const e =
+      document.createElement('div');
 
     e.className =
       'day' +
@@ -187,9 +233,18 @@ function renderDutyCalendar(){
 
     e.innerHTML =
       `<div class="num">${d}</div>` +
-      `<small>${duty ? '值班日' : '非值班日'}${holiday ? ' · 法定休息' : ''}</small>`;
+      `<small>${
+        duty
+          ? '值班日'
+          : '非值班日'
+      }${
+        holiday
+          ? ' · 法定休息'
+          : ''
+      }</small>`;
 
     e.onclick = () => {
+
       if(state.dutyDates.has(ds)){
         state.dutyDates.delete(ds);
       }else{
@@ -207,74 +262,99 @@ function renderDutyCalendar(){
 }
 
 function renderPeople(){
-  renderPeopleGroup('oldList','olds');
-  renderPeopleGroup('newList','news');
+
+  renderPeopleGroup(
+    'oldList',
+    'olds'
+  );
+
+  renderPeopleGroup(
+    'newList',
+    'news'
+  );
 
   const names = allPeople();
 
-  /*
-   * firstDuty 是“当月第一个实际值班日”的值班人员。
-   * 无论1号是不是值班日，都需要先选择。
-   */
   if(!names.includes(state.firstDuty)){
-    state.firstDuty = names[0] || '';
+    state.firstDuty =
+      names[0] || '';
   }
 
   $('firstDuty').innerHTML =
     names
-      .map(n => `<option value="${esc(n)}">${esc(n)}</option>`)
+      .map(
+        n =>
+          `<option value="${esc(n)}">${esc(n)}</option>`
+      )
       .join('');
 
-  $('firstDuty').value = state.firstDuty;
+  $('firstDuty').value =
+    state.firstDuty;
 
   $('firstDuty').onchange = e => {
-    state.firstDuty = e.target.value;
+
+    state.firstDuty =
+      e.target.value;
 
     renderFirstDay();
+
     updatePrecheck();
   };
 
   renderFirstDay();
 }
 
-function renderPeopleGroup(container,key){
+function renderPeopleGroup(
+  container,
+  key
+){
+
   const c = $(container);
 
   c.innerHTML = '';
 
-  state[key].forEach((name,i) => {
-    const row = document.createElement('div');
+  state[key].forEach(
+    (name,i) => {
 
-    row.className = 'person-row';
+      const row =
+        document.createElement('div');
 
-    row.innerHTML =
-      `<span class="tag">${i+1}.</span>` +
-      `<input type="text" value="${esc(name)}">` +
-      `<button class="btn danger">删除</button>`;
+      row.className =
+        'person-row';
 
-    const inp = row.querySelector('input');
+      row.innerHTML =
+        `<span class="tag">${i+1}.</span>` +
+        `<input type="text" value="${esc(name)}">` +
+        `<button class="btn danger">删除</button>`;
 
-    inp.onchange = () => {
-      state[key][i] =
-        inp.value.trim() || `未命名${i+1}`;
+      const inp =
+        row.querySelector('input');
 
-      /*
-       * 如果修改了人员姓名，而 firstDuty 原来指向旧名字，
-       * renderPeople 会自动修正。
-       */
-      renderPeople();
-      updatePrecheck();
-    };
+      inp.onchange = () => {
 
-    row.querySelector('button').onclick = () => {
-      state[key].splice(i,1);
+        state[key][i] =
+          inp.value.trim() ||
+          `未命名${i+1}`;
 
-      renderPeople();
-      updatePrecheck();
-    };
+        renderPeople();
 
-    c.appendChild(row);
-  });
+        updatePrecheck();
+      };
+
+      row
+        .querySelector('button')
+        .onclick = () => {
+
+          state[key].splice(i,1);
+
+          renderPeople();
+
+          updatePrecheck();
+        };
+
+      c.appendChild(row);
+    }
+  );
 }
 
 function esc(s){
@@ -290,6 +370,7 @@ function esc(s){
 }
 
 function addPerson(key){
+
   state[key].push(
     key === 'olds'
       ? `老鸟${state[key].length+1}`
@@ -297,63 +378,84 @@ function addPerson(key){
   );
 
   renderPeople();
+
   updatePrecheck();
 }
 
 /*
- * 1号班次输入：
+ * 1号班次配置：
  *
- * 情况1：1号是值班日
- * - firstDuty 自动固定为 D
- * - 不显示 firstDuty 对应的人
- * - 其他人只能 W/N/R
+ * 1. 1号是值班日：
+ *    - firstDuty 自动固定为 D
+ *    - firstDuty 不显示在下面
+ *    - 其他人只能选择 W/N/R
  *
- * 情况2：1号不是值班日
- * - 显示所有人
- * - 所有人只能 W/N/R
+ * 2. 1号不是值班日：
+ *    - 所有人都显示
+ *    - 所有人只能选择 W/N/R
+ *
+ * 特别注意：
+ * 这里的人工输入不参与规则校验。
  */
 function renderFirstDay(){
-  const body = $('firstDayBody');
+
+  const body =
+    $('firstDayBody');
 
   body.innerHTML = '';
 
-  const names = allPeople();
-  const first = state.days[0];
-  const firstIsDuty = first && state.dutyDates.has(first);
+  const names =
+    allPeople();
+
+  const first =
+    state.days[0];
+
+  const firstIsDuty =
+    first &&
+    state.dutyDates.has(first);
 
   names.forEach(n => {
 
-    // 如果1号是值班日，首个值班人员不参与下面的手动选择。
-    if(firstIsDuty && n === state.firstDuty){
+    if(
+      firstIsDuty &&
+      n === state.firstDuty
+    ){
+      /*
+       * firstDuty 是人工指定的
+       * 当月第一个值班日值班人员。
+       *
+       * 如果1号就是值班日，
+       * 则1号该人员固定为D。
+       */
       state.firstDay[n] = 'D';
       return;
     }
 
-    const tr = document.createElement('tr');
-
-    const options = [
-      '<option value="">请选择</option>',
-      '<option value="W">白班</option>',
-      '<option value="N">下夜</option>',
-      '<option value="R">休息</option>'
-    ];
-
-    const current = state.firstDay[n] || '';
+    const tr =
+      document.createElement('tr');
 
     tr.innerHTML =
       `<td>${esc(n)}</td>` +
       `<td>` +
-      `<select data-name="${esc(n)}">` +
-      options.join('') +
-      `</select>` +
+        `<select data-name="${esc(n)}">` +
+          `<option value="">请选择</option>` +
+          `<option value="W">白班</option>` +
+          `<option value="N">下夜</option>` +
+          `<option value="R">休息</option>` +
+        `</select>` +
       `</td>`;
 
-    const s = tr.querySelector('select');
+    const s =
+      tr.querySelector('select');
 
-    s.value = current;
+    s.value =
+      state.firstDay[n] || '';
 
     s.onchange = () => {
-      state.firstDay[n] = s.value;
+
+      state.firstDay[n] =
+        s.value;
+
       updatePrecheck();
     };
 
@@ -361,41 +463,43 @@ function renderFirstDay(){
   });
 
   /*
-   * 如果1号不是值班日，则任何人的 firstDay 都不允许是 D。
+   * 1号不是值班日：
+   * 手工输入本身永远不会存在D。
    */
-  if(!firstIsDuty){
-    names.forEach(n => {
-      if(state.firstDay[n] === 'D'){
-        state.firstDay[n] = '';
-      }
-    });
-  }
 }
 
 function syncFirstDay(){
+
   renderFirstDay();
 
-  const s = $('firstDuty');
+  const s =
+    $('firstDuty');
 
   if(s){
-    s.value = state.firstDuty;
+    s.value =
+      state.firstDuty;
   }
 }
 
+/*
+ * 注意：
+ * 本函数只检查“配置是否填写完整”，
+ * 不检查人工填入的班次是否符合任何排班规则。
+ */
 function updatePrecheck(){
-  const names = allPeople();
+
+  const names =
+    allPeople();
+
   const msgs = [];
 
-  const first = state.days[0];
-  const firstIsDuty = first && state.dutyDates.has(first);
-
   if(names.length === 0){
-    msgs.push(['error','至少需要1名人员。']);
+    msgs.push([
+      'error',
+      '至少需要1名人员。'
+    ]);
   }
 
-  /*
-   * 任何情况下都需要选择“当月第一个实际值班日”的值班人员。
-   */
   if(
     !state.firstDuty ||
     !names.includes(state.firstDuty)
@@ -406,80 +510,56 @@ function updatePrecheck(){
     ]);
   }
 
+  const first =
+    state.days[0];
+
+  const firstIsDuty =
+    first &&
+    state.dutyDates.has(first);
+
   /*
-   * 检查1号所有需要手动填写的人。
+   * 只有“没有填写”才提示。
+   * 不检查填写内容是否违反规则。
    */
   const manualPeople =
     firstIsDuty
-      ? names.filter(n => n !== state.firstDuty)
+      ? names.filter(
+          n => n !== state.firstDuty
+        )
       : names;
 
   manualPeople.forEach(n => {
+
     if(!state.firstDay[n]){
       msgs.push([
         'warn',
         `请填写${n}的1号班次。`
       ]);
     }
-
-    /*
-     * 手动班次绝对不能是D。
-     */
-    if(state.firstDay[n] === 'D'){
-      msgs.push([
-        'error',
-        `1号${n}不能手动选择“值班”。`
-      ]);
-    }
   });
-
-  /*
-   * 如果1号是值班日，firstDuty 自动就是值班。
-   */
-  if(firstIsDuty){
-    if(state.firstDay[state.firstDuty] &&
-       state.firstDay[state.firstDuty] !== 'D'){
-      msgs.push([
-        'error',
-        `1号首个值班人员“${state.firstDuty}”必须是“值班”。`
-      ]);
-    }
-  }
-
-  /*
-   * 1号不得出现多个手动D。
-   */
-  if(
-    Object.values(state.firstDay)
-      .filter(x => x === 'D')
-      .length > (firstIsDuty ? 1 : 0)
-  ){
-    msgs.push([
-      'error',
-      '1号只能有1名值班人员。'
-    ]);
-  }
-
-  /*
-   * 如果1号是值班日，强制确保 firstDuty = D。
-   */
-  if(firstIsDuty){
-    state.firstDay[state.firstDuty] = 'D';
-  }
 
   $('precheck').innerHTML =
     msgs.length
-      ? msgs.map(x =>
-          `<div class="alert ${x[0]}">${x[1]}</div>`
-        ).join('')
+      ? msgs
+          .map(
+            x =>
+              `<div class="alert ${x[0]}">${x[1]}</div>`
+          )
+          .join('')
       : '<div class="alert info">配置检查通过后即可生成。</div>';
 
-  return !msgs.some(x => x[0] === 'error');
+  return !msgs.some(
+    x => x[0] === 'error'
+  );
 }
 
 function buildDutySequence(){
-  const old = state.olds;
-  const nw = state.news;
+
+  const old =
+    state.olds;
+
+  const nw =
+    state.news;
 
   if(!old.length && !nw.length){
     return [];
@@ -488,7 +568,9 @@ function buildDutySequence(){
   const rounds = [];
 
   const target =
-    state.days.filter(d => state.dutyDates.has(d)).length;
+    state.days.filter(
+      d => state.dutyDates.has(d)
+    ).length;
 
   if(!target){
     return [];
@@ -496,25 +578,41 @@ function buildDutySequence(){
 
   /*
    * 例如：
-   * 老鸟 ABC
-   * 新人 DE
+   * A B C
+   * D E
    *
-   * ABCD
-   * ABCE
-   * ABCD
-   * ABCE
+   * A B C D
+   * A B C E
+   * A B C D
+   * A B C E
    */
-  let maxRounds = Math.max(2,target+2);
+  const maxRounds =
+    Math.max(
+      2,
+      target + 2
+    );
 
-  for(let r=0;r<maxRounds;r++){
-    old.forEach(x => rounds.push(x));
+  for(
+    let r=0;
+    r<maxRounds;
+    r++
+  ){
+
+    old.forEach(
+      x => rounds.push(x)
+    );
 
     if(nw.length){
-      rounds.push(nw[r % nw.length]);
+      rounds.push(
+        nw[r % nw.length]
+      );
     }
   }
 
-  let start = rounds.indexOf(state.firstDuty);
+  let start =
+    rounds.indexOf(
+      state.firstDuty
+    );
 
   if(start < 0){
     start = 0;
@@ -522,20 +620,37 @@ function buildDutySequence(){
 
   const seq = [];
 
-  for(let i=0;i<target;i++){
+  for(
+    let i=0;
+    i<target;
+    i++
+  ){
     seq.push(
-      rounds[(start+i) % rounds.length]
+      rounds[
+        (start+i) %
+        rounds.length
+      ]
     );
   }
 
   return seq;
 }
 
+/*
+ * 生成“算法固定班次”。
+ *
+ * 这里把人工1号班次也作为固定输入，
+ * 但后续不会因为人工1号班次违反规则而拒绝。
+ */
 function fixedByDuty(){
-  const dutyDays =
-    state.days.filter(d => state.dutyDates.has(d));
 
-  const seq = buildDutySequence();
+  const dutyDays =
+    state.days.filter(
+      d => state.dutyDates.has(d)
+    );
+
+  const seq =
+    buildDutySequence();
 
   const fixed = {};
 
@@ -543,85 +658,108 @@ function fixedByDuty(){
     fixed[ds] = {};
   });
 
-  dutyDays.forEach((ds,i) => {
-    const p = seq[i];
+  dutyDays.forEach(
+    (ds,i) => {
 
-    if(!p){
-      return;
+      const p = seq[i];
+
+      if(!p){
+        return;
+      }
+
+      fixed[ds][p] = 'D';
+
+      const idx =
+        state.days.indexOf(ds);
+
+      if(
+        idx+1 < state.days.length &&
+        !fixed[state.days[idx+1]][p]
+      ){
+        fixed[state.days[idx+1]][p] =
+          'N';
+      }
+
+      if(
+        idx+2 < state.days.length &&
+        !fixed[state.days[idx+2]][p]
+      ){
+        fixed[state.days[idx+2]][p] =
+          'R';
+      }
     }
+  );
 
-    fixed[ds][p] = 'D';
+  const first =
+    state.days[0];
 
-    const idx = state.days.indexOf(ds);
-
-    if(
-      idx + 1 < state.days.length &&
-      !fixed[state.days[idx+1]][p]
-    ){
-      fixed[state.days[idx+1]][p] = 'N';
-    }
-
-    if(
-      idx + 2 < state.days.length &&
-      !fixed[state.days[idx+2]][p]
-    ){
-      fixed[state.days[idx+2]][p] = 'R';
-    }
-  });
-
-  /*
-   * 1号是人工输入的起点。
-   *
-   * 如果1号是值班日：
-   *   firstDuty 已经由上面自动确定为D，
-   *   不允许其他人工输入覆盖。
-   *
-   * 如果1号不是值班日：
-   *   所有人均使用人工输入的 W/N/R。
-   */
-  const first = state.days[0];
   const firstIsDuty =
-    first && state.dutyDates.has(first);
+    first &&
+    state.dutyDates.has(first);
 
+  /*
+   * 人工输入的1号班次优先。
+   *
+   * 1号是值班日时：
+   * firstDuty = D。
+   *
+   * 其他人工输入作为强制结果。
+   */
   allPeople().forEach(p => {
-    if(firstIsDuty && p === state.firstDuty){
+
+    if(
+      firstIsDuty &&
+      p === state.firstDuty
+    ){
+
       fixed[first][p] = 'D';
-    }else if(state.firstDay[p]){
-      fixed[first][p] = state.firstDay[p];
+
+    }else if(
+      state.firstDay[p]
+    ){
+
+      fixed[first][p] =
+        state.firstDay[p];
     }
   });
 
   /*
-   * 根据1号人工班次向后推导：
+   * 根据1号输入向后推导自然班次。
    *
-   * D -> 第二天N，第三天R
-   * N -> 第二天R
-   *
-   * 如果1号是值班日，首个值班人员同样适用。
+   * 这里仍然保留“D -> N -> R”的自然推导。
+   * 但不会因为人工输入本身不合理而报错。
    */
   allPeople().forEach(p => {
-    const x = fixed[first][p];
+
+    const x =
+      fixed[first][p];
 
     if(x === 'D'){
+
       if(
         state.days[1] &&
         !fixed[state.days[1]][p]
       ){
-        fixed[state.days[1]][p] = 'N';
+        fixed[state.days[1]][p] =
+          'N';
       }
 
       if(
         state.days[2] &&
         !fixed[state.days[2]][p]
       ){
-        fixed[state.days[2]][p] = 'R';
+        fixed[state.days[2]][p] =
+          'R';
       }
+
     }else if(x === 'N'){
+
       if(
         state.days[1] &&
         !fixed[state.days[1]][p]
       ){
-        fixed[state.days[1]][p] = 'R';
+        fixed[state.days[1]][p] =
+          'R';
       }
     }
   });
@@ -629,108 +767,126 @@ function fixedByDuty(){
   return fixed;
 }
 
-function validateStatic(fixed){
-  const issues = [];
-
-  const names = allPeople();
-  const first = state.days[0];
-
-  /*
-   * 值班后的两天不能再次值班。
-   */
-  state.days.forEach((ds,idx) => {
-    const p =
-      Object.entries(fixed[ds])
-        .find(([,v]) => v === 'D')?.[0];
-
-    if(p){
-      for(const j of [idx+1,idx+2]){
-        if(
-          j < state.days.length &&
-          fixed[state.days[j]][p] === 'D'
-        ){
-          issues.push(
-            `${fmtDate(ds)} ${p}后两天内又被排值班`
-          );
-        }
-      }
-    }
-  });
-
-  const duty1 =
-    Object.entries(fixed[first] || {})
-      .find(([,v]) => v === 'D')?.[0];
-
-  /*
-   * 1号如果是值班日，必须由 firstDuty 值班。
-   */
-  if(
-    state.dutyDates.has(first) &&
-    duty1 &&
-    duty1 !== state.firstDuty
-  ){
-    issues.push(
-      '1号值班人员与“当月第一个值班日的值班人员”不一致'
-    );
-  }
-
-  if(
-    state.dutyDates.has(first) &&
-    !duty1
-  ){
-    issues.push(
-      '1号是值班日，但没有有效的值班人员'
-    );
-  }
-
-  names.forEach(p => {
-    let r = 0;
-
-    state.days.forEach(ds => {
-      if(fixed[ds][p] === 'R'){
-        r++;
-      }
-    });
-
-    if(r > state.holidays.size){
-      issues.push(
-        `${p}的固定“休息”已有${r}天，超过当月法定休息日${state.holidays.size}天`
-      );
-    }
-  });
-
-  return issues;
+/*
+ * 重要变化：
+ *
+ * 删除原来的 validateStatic()。
+ *
+ * 原来的校验会检查：
+ * - 人工1号是否与firstDuty一致
+ * - 人工1号是否产生多个值班
+ * - 人工休息是否超过法定休息日
+ * - 固定班次之间是否冲突
+ *
+ * 现在这些都不再作为生成前置条件。
+ */
+function validateStatic(){
+  return [];
 }
 
 /*
- * Dynamic programming over days and each person's exact rest count.
+ * 统计“人工固定的休息日”。
+ *
+ * 对算法而言：
+ * 如果某人1号人工填写了R，
+ * 那么这1天已经占用了一个休息名额。
+ *
+ * 但是如果人工输入导致休息数超过H，
+ * 仍然不报错。
+ *
+ * 这种情况下后续算法不再强制增加自动休息，
+ * 最终休息总数可以 > H。
+ */
+function getManualRestCount(fixed, person){
+
+  const first =
+    state.days[0];
+
+  if(
+    first &&
+    fixed[first] &&
+    fixed[first][person] === 'R'
+  ){
+    return 1;
+  }
+
+  return 0;
+}
+
+/*
+ * 排班求解器
+ *
+ * 核心思想：
+ *
+ * 1. 人工输入的班次绝对不修改。
+ * 2. 人工输入的班次绝对不因为违反规则而报错。
+ * 3. 自动部分只负责安排剩余人员。
+ * 4. 每个人如果人工已经休息1天，
+ *    自动休息目标就减少1天。
+ * 5. 如果人工休息已经超过H，
+ *    自动部分不再强制休息。
  */
 function solve(){
-  const names = allPeople();
-  const P = names.length;
-  const H = state.holidays.size;
+
+  const names =
+    allPeople();
+
+  const P =
+    names.length;
+
+  const H =
+    state.holidays.size;
 
   if(P === 0){
     throw new Error('没有人员');
   }
 
-  const fixed = fixedByDuty();
+  const fixed =
+    fixedByDuty();
 
-  const staticIssues = validateStatic(fixed);
+  /*
+   * 每个人允许的“自动休息上限”。
+   */
+  const manualRest =
+    Array(P).fill(0);
 
-  if(staticIssues.length){
-    throw new Error(staticIssues.join('；'));
+  const restTarget =
+    Array(P).fill(0);
+
+  for(let i=0;i<P;i++){
+
+    manualRest[i] =
+      getManualRestCount(
+        fixed,
+        names[i]
+      );
+
+    restTarget[i] =
+      Math.max(
+        0,
+        H - manualRest[i]
+      );
   }
 
-  const rad = Array(P).fill(H+1);
-  const mult = Array(P).fill(1);
+  /*
+   * 状态空间按照每个人“自动休息次数”
+   * 进行编码。
+   */
+  const rad =
+    restTarget.map(x => x+1);
+
+  const mult =
+    Array(P).fill(1);
 
   for(let i=1;i<P;i++){
-    mult[i] = mult[i-1] * rad[i-1];
+    mult[i] =
+      mult[i-1] * rad[i-1];
   }
 
   const totalStates =
-    mult[P-1] * rad[P-1];
+    P === 0
+      ? 1
+      : mult[P-1] * rad[P-1];
 
   if(totalStates > 3000000){
     throw new Error(
@@ -738,65 +894,110 @@ function solve(){
     );
   }
 
-  let cur = new Map([
-    [0,{
-      score:0,
-      path:null,
-      mask:null
-    }]
-  ]);
+  let cur =
+    new Map([
+      [
+        0,
+        {
+          score:0,
+          path:null,
+          mask:null
+        }
+      ]
+    ]);
 
-  const layers = [];
-
+  /*
+   * masks：
+   * 0 = 自动白班
+   * 1 = 自动休息
+   *
+   * 固定班次不会进入mask。
+   */
   for(
     let di=0;
     di<state.days.length;
     di++
   ){
-    const ds = state.days[di];
-    const wd = weekday(ds);
-    const holiday = state.holidays.has(ds);
 
+    const ds =
+      state.days[di];
+
+    const wd =
+      weekday(ds);
+
+    const holiday =
+      state.holidays.has(ds);
+
+    /*
+     * 白班下限：
+     *
+     * 周一、二、三、五：
+     * 至少2个。
+     *
+     * 周四：
+     * 至少1个。
+     *
+     * 周六、周日：
+     * 默认不强制白班。
+     *
+     * 法定休息日：
+     * 老鸟值班 -> 可以没有白班
+     * 新人值班 -> 至少1名老鸟白班
+     */
     let minWhite;
+
+    const dutyName =
+      Object.entries(
+        fixed[ds] || {}
+      ).find(
+        ([,v]) => v === 'D'
+      )?.[0];
 
     if(holiday){
 
-      const dutyName =
-        Object.entries(fixed[ds] || {})
-          .find(([,v]) => v === 'D')?.[0];
+      if(
+        dutyName &&
+        isOld(dutyName)
+      ){
+        minWhite = 0;
+      }else{
+        minWhite = 1;
+      }
 
-      minWhite =
-        dutyName && isOld(dutyName)
-          ? 0
-          : 1;
-
-    }else if([1,2,5].includes(wd)){
-
-      minWhite = 2;
-
-    }else if([3,4].includes(wd)){
+    }else if(
+      [1,2,3,5].includes(wd)
+    ){
 
       minWhite = 2;
+
+    }else if(wd === 4){
+
+      minWhite = 1;
 
     }else{
 
       minWhite = 0;
-
     }
 
     const opts = [];
 
-    function rec(i,adds,white,oldWhite){
+    function rec(
+      i,
+      adds,
+      white,
+      oldWhite
+    ){
+
       if(i === P){
 
         if(white < minWhite){
           return;
         }
 
-        const dutyName =
-          Object.entries(fixed[ds] || {})
-            .find(([,v]) => v === 'D')?.[0];
-
+        /*
+         * 法定休息日 + 新人值班：
+         * 至少1名老鸟白班。
+         */
         if(
           holiday &&
           dutyName &&
@@ -820,30 +1021,42 @@ function solve(){
 
       if(fx){
 
-        if(fx === 'R'){
-          adds[i] = 1;
-        }else{
-          adds[i] = 0;
-        }
+        /*
+         * 固定班次：
+         *
+         * R = 已占用1个休息
+         * W / D / N = 不增加自动休息
+         *
+         * 注意：
+         * 这里不会检查固定班次是否违反规则。
+         */
+        adds[i] =
+          fx === 'R'
+            ? 1
+            : 0;
 
         rec(
           i+1,
           adds,
-          white + (fx === 'W' ? 1 : 0),
+          white +
+            (fx === 'W' ? 1 : 0),
           oldWhite +
-          (
-            fx === 'W' && isOld(names[i])
-              ? 1
-              : 0
-          )
+            (
+              fx === 'W' &&
+              isOld(names[i])
+                ? 1
+                : 0
+            )
         );
 
         return;
       }
 
       /*
-       * 非固定人员只有两种选择：
-       * W / R
+       * 当前人员没有固定班次。
+       *
+       * 选择白班：
+       * 不增加自动休息。
        */
       adds[i] = 0;
 
@@ -852,8 +1065,20 @@ function solve(){
         adds,
         white+1,
         oldWhite +
-        (isOld(names[i]) ? 1 : 0)
+          (
+            isOld(names[i])
+              ? 1
+              : 0
+          )
       );
+
+      /*
+       * 选择休息：
+       *
+       * 只有当这个人还没有达到自己的
+       * 自动休息目标时才允许。
+       */
+      const currentCode = 0;
 
       adds[i] = 1;
 
@@ -872,31 +1097,65 @@ function solve(){
       0
     );
 
-    const next = new Map();
+    const next =
+      new Map();
 
     for(const [code,entry] of cur){
 
       for(const o of opts){
 
-        let nc = code;
+        let nc =
+          code;
+
         let ok = true;
 
         for(let i=0;i<P;i++){
 
+          /*
+           * 当前自动休息数。
+           */
           const c =
-            Math.floor(nc / mult[i]) %
-            (H+1);
+            Math.floor(
+              nc / mult[i]
+            ) %
+            rad[i];
 
-          const n =
-            c + o.adds[i];
-
-          if(n > H){
-            ok = false;
-            break;
-          }
-
+          /*
+           * 固定R / 自动R都会在adds中表现为1。
+           *
+           * 固定R虽然已经属于人工/自动固定，
+           * 但不能再次增加编码。
+           */
           if(o.adds[i]){
+
+            /*
+             * 计算本人的自动目标。
+             *
+             * 如果该日期是固定R，
+             * 它不应该再次计入自动restTarget。
+             *
+             * 因此这里需要判断：
+             */
+            const fx =
+              fixed[ds] &&
+              fixed[ds][names[i]];
+
+            if(fx === 'R'){
+              continue;
+            }
+
+            const n =
+              c + 1;
+
+            if(
+              n > restTarget[i]
+            ){
+              ok = false;
+              break;
+            }
+
             nc += mult[i];
+
           }
         }
 
@@ -910,7 +1169,18 @@ function solve(){
 
         for(let i=0;i<P;i++){
 
-          if(o.adds[i] === 1){
+          const fx =
+            fixed[ds] &&
+            fixed[ds][names[i]];
+
+          const isRest =
+            fx === 'R' ||
+            (
+              !fx &&
+              o.adds[i] === 1
+            );
+
+          if(isRest){
 
             if(holiday){
               hrest++;
@@ -918,17 +1188,23 @@ function solve(){
 
           }else{
 
-            /*
-             * 周一、二、五优先级高。
-             */
-            if([1,2,5].includes(wd)){
+            if(
+              [1,2,5].includes(wd) &&
+              (
+                fx === 'W' ||
+                (!fx && o.adds[i] === 0)
+              )
+            ){
               tw++;
             }
 
-            /*
-             * 周三、四次级。
-             */
-            if([3,4].includes(wd)){
+            if(
+              [3,4].includes(wd) &&
+              (
+                fx === 'W' ||
+                (!fx && o.adds[i] === 0)
+              )
+            ){
               mw++;
             }
           }
@@ -937,7 +1213,7 @@ function solve(){
         /*
          * 优先级：
          *
-         * 1. 法定休息日安排休息
+         * 1. 法定休息日休息
          * 2. 周一/二/五白班
          * 3. 周三/四白班
          */
@@ -947,12 +1223,14 @@ function solve(){
           tw * 100 +
           mw;
 
-        const old = next.get(nc);
+        const old =
+          next.get(nc);
 
         if(
           !old ||
           score > old.score
         ){
+
           next.set(
             nc,
             {
@@ -966,77 +1244,105 @@ function solve(){
     }
 
     if(!next.size){
+
+      /*
+       * 注意：
+       *
+       * 不再因为人工1号班次本身违反规则而
+       * 报错。
+       *
+       * 这里只代表：
+       * 在保留人工结果的情况下，
+       * 剩余自动部分无法满足可执行约束。
+       */
       throw new Error(
-        `${fmtDate(ds)}附近无法同时满足“白班下限 + 固定下夜/休息 + 每人休息天数=${H}天”。请检查节假日、值班日或1号班次配置。`
+        `${fmtDate(ds)}附近无法完成自动排班。请适当调整值班日期或自动排班条件。`
       );
     }
 
-    layers.push(next);
     cur = next;
   }
 
-  let code = 0;
+  /*
+   * 最终目标不是统一H，
+   * 而是每个人各自的自动休息目标。
+   */
+  let targetCode = 0;
 
   for(let i=0;i<P;i++){
-    code += H * mult[i];
+    targetCode +=
+      restTarget[i] *
+      mult[i];
   }
 
-  const end = cur.get(code);
+  const end =
+    cur.get(targetCode);
 
   if(!end){
+
     throw new Error(
-      `找不到满足每人恰好${H}天休息的完整排班。可能是固定下夜/休息与休息日数量冲突。`
+      '在保留人工填写班次的情况下，找不到完整的自动排班结果。'
     );
   }
 
   const byDay =
     Array(state.days.length);
 
-  let node = end;
+  let node =
+    end;
 
   for(
     let di=state.days.length-1;
     di>=0;
     di--
   ){
-    byDay[di] = node.mask;
-    node = node.path;
+
+    byDay[di] =
+      node.mask;
+
+    node =
+      node.path;
   }
 
   const result = {};
 
-  state.days.forEach((ds,di) => {
+  state.days.forEach(
+    (ds,di) => {
 
-    result[ds] = {};
+      result[ds] = {};
 
-    for(let i=0;i<P;i++){
+      for(let i=0;i<P;i++){
 
-      const fx =
-        fixed[ds][names[i]];
+        const fx =
+          fixed[ds][names[i]];
 
-      result[ds][names[i]] =
-        fx ||
-        (
-          byDay[di][i] === 1
-            ? 'R'
-            : 'W'
-        );
+        result[ds][names[i]] =
+          fx ||
+          (
+            byDay[di][i] === 1
+              ? 'R'
+              : 'W'
+          );
+      }
     }
-  });
+  );
 
   return result;
 }
 
 function generate(){
+
   if(!updatePrecheck()){
     return;
   }
 
-  const names = allPeople();
+  const names =
+    allPeople();
 
   const dup =
     names.filter(
-      (n,i) => names.indexOf(n) !== i
+      (n,i) =>
+        names.indexOf(n) !== i
     );
 
   if(dup.length){
@@ -1049,10 +1355,13 @@ function generate(){
 
   try{
 
-    state.result = solve();
+    state.result =
+      solve();
+
     state.modified = false;
 
     renderResult();
+
     showStep(5);
 
   }catch(e){
@@ -1062,14 +1371,16 @@ function generate(){
   }
 }
 
-/*
- * 人员班次实时统计
- */
 function updateSummary(){
-  const names = allPeople();
-  const res = state.result;
 
-  const sm = $('summary');
+  const names =
+    allPeople();
+
+  const res =
+    state.result;
+
+  const sm =
+    $('summary');
 
   if(!sm || !res){
     return;
@@ -1079,14 +1390,15 @@ function updateSummary(){
 
   names.forEach(p => {
 
-    let r=0;
-    let d=0;
-    let n=0;
-    let w=0;
+    let r = 0;
+    let d = 0;
+    let n = 0;
+    let w = 0;
 
     state.days.forEach(ds => {
 
-      const x = res[ds][p];
+      const x =
+        res[ds][p];
 
       if(x === 'R') r++;
       else if(x === 'D') d++;
@@ -1094,9 +1406,11 @@ function updateSummary(){
       else if(x === 'W') w++;
     });
 
-    const e = document.createElement('div');
+    const e =
+      document.createElement('div');
 
-    e.className = 'stat';
+    e.className =
+      'stat';
 
     e.innerHTML =
       `<b>${esc(p)}</b>` +
@@ -1106,64 +1420,112 @@ function updateSummary(){
   });
 }
 
-/*
- * 创建人工调整弹框。
- *
- * 不依赖 index.html 中预先存在的弹框，
- * 因此这次不需要修改 index.html。
- */
 function ensureEditDialog(){
 
   if($('editOverlay')){
     return;
   }
 
-  const overlay = document.createElement('div');
+  const overlay =
+    document.createElement('div');
 
-  overlay.id = 'editOverlay';
+  overlay.id =
+    'editOverlay';
 
-  overlay.className = 'hidden';
+  overlay.className =
+    'hidden';
 
   overlay.innerHTML = `
     <div class="edit-backdrop"></div>
+
     <div class="edit-dialog">
-      <div class="edit-title" id="editTitle">调整班次</div>
-      <div class="edit-current" id="editCurrent"></div>
+
+      <div
+        class="edit-title"
+        id="editTitle"
+      >调整班次</div>
+
+      <div
+        class="edit-current"
+        id="editCurrent"
+      ></div>
 
       <div class="edit-options">
-        <button type="button" class="edit-shift-btn shift-D" data-shift="D">值班</button>
-        <button type="button" class="edit-shift-btn shift-W" data-shift="W">白班</button>
-        <button type="button" class="edit-shift-btn shift-N" data-shift="N">下夜</button>
-        <button type="button" class="edit-shift-btn shift-R" data-shift="R">休息</button>
+
+        <button
+          type="button"
+          class="edit-shift-btn shift-D"
+          data-shift="D"
+        >值班</button>
+
+        <button
+          type="button"
+          class="edit-shift-btn shift-W"
+          data-shift="W"
+        >白班</button>
+
+        <button
+          type="button"
+          class="edit-shift-btn shift-N"
+          data-shift="N"
+        >下夜</button>
+
+        <button
+          type="button"
+          class="edit-shift-btn shift-R"
+          data-shift="R"
+        >休息</button>
+
       </div>
 
-      <button type="button" class="edit-cancel">取消</button>
+      <button
+        type="button"
+        class="edit-cancel"
+      >取消</button>
+
     </div>
   `;
 
   document.body.appendChild(overlay);
 
-  overlay.querySelector('.edit-backdrop').onclick =
-    closeShiftEditor;
+  overlay
+    .querySelector('.edit-backdrop')
+    .onclick =
+      closeShiftEditor;
 
-  overlay.querySelector('.edit-cancel').onclick =
-    closeShiftEditor;
+  overlay
+    .querySelector('.edit-cancel')
+    .onclick =
+      closeShiftEditor;
 
-  overlay.querySelectorAll('.edit-shift-btn').forEach(btn => {
-    btn.onclick = () => {
-      applyShift(btn.dataset.shift);
-    };
-  });
+  overlay
+    .querySelectorAll('.edit-shift-btn')
+    .forEach(btn => {
+
+      btn.onclick = () => {
+
+        applyShift(
+          btn.dataset.shift
+        );
+      };
+    });
 }
 
-function openShiftEditor(ds,person){
+function openShiftEditor(
+  ds,
+  person
+){
 
   ensureEditDialog();
 
-  const overlay = $('editOverlay');
+  const overlay =
+    $('editOverlay');
 
-  overlay.dataset.date = ds;
-  overlay.dataset.person = encodeURIComponent(person);
+  overlay.dataset.date =
+    ds;
+
+  overlay.dataset.person =
+    encodeURIComponent(person);
 
   const current =
     state.result?.[ds]?.[person] || '';
@@ -1174,38 +1536,53 @@ function openShiftEditor(ds,person){
   $('editCurrent').textContent =
     `当前班次：${SHIFT[current] || '未设置'}`;
 
-  overlay.classList.remove('hidden');
+  overlay.classList.remove(
+    'hidden'
+  );
 }
 
 function closeShiftEditor(){
 
-  const overlay = $('editOverlay');
+  const overlay =
+    $('editOverlay');
 
   if(!overlay){
     return;
   }
 
-  overlay.classList.add('hidden');
+  overlay.classList.add(
+    'hidden'
+  );
 }
 
 /*
- * 人工修改班次
+ * 人工修改：
  *
- * 修改后：
- * 1. state.result 立即更新
- * 2. 排班表重新渲染
- * 3. 人员班次统计重新计算
- * 4. Excel / CSV 使用新的 state.result
+ * 不进行任何规则校验。
+ *
+ * 不重新调用solve()。
+ * 不验证：
+ * - 值班顺序
+ * - 值班后的下夜/休息
+ * - 白班最低人数
+ * - 老鸟/新人规则
+ * - 法定休息日
+ * - 每人休息天数
+ *
+ * 只更新最终结果。
  */
 function applyShift(shift){
 
-  const overlay = $('editOverlay');
+  const overlay =
+    $('editOverlay');
 
   if(!overlay){
     return;
   }
 
-  const ds = overlay.dataset.date;
+  const ds =
+    overlay.dataset.date;
+
   const person =
     decodeURIComponent(
       overlay.dataset.person || ''
@@ -1219,27 +1596,28 @@ function applyShift(shift){
     return;
   }
 
-  state.result[ds][person] = shift;
+  state.result[ds][person] =
+    shift;
+
   state.modified = true;
 
   closeShiftEditor();
 
+  /*
+   * 重新渲染：
+   * - 排班表
+   * - 人员统计
+   */
   renderResult();
-
-  const alertBox = $('resultAlert');
-
-  if(alertBox){
-    alertBox.innerHTML =
-      '<div class="alert warn">' +
-      '排班结果已人工调整。人员班次统计已实时更新，当前下载的 Excel/CSV 将使用调整后的结果。' +
-      '</div>';
-  }
 }
 
 function renderResult(){
 
-  const names = allPeople();
-  const res = state.result;
+  const names =
+    allPeople();
+
+  const res =
+    state.result;
 
   if(!res){
     return;
@@ -1254,20 +1632,25 @@ function renderResult(){
       : '<div class="alert ok">排班生成成功。点击任意班次单元格可以人工调整。</div>';
 
   /*
-   * 人员班次统计
+   * 每次renderResult都重新统计。
+   * 因此人工调整后这里会实时变化。
    */
   updateSummary();
 
-  const t = $('resultTable');
+  const t =
+    $('resultTable');
 
   let h =
     '<thead><tr><th>人员</th>';
 
   state.days.forEach(ds => {
-    h += `<th>${fmtDate(ds)}</th>`;
+
+    h +=
+      `<th>${fmtDate(ds)}</th>`;
   });
 
-  h += '</tr></thead><tbody>';
+  h +=
+    '</tr></thead><tbody>';
 
   names.forEach(p => {
 
@@ -1276,44 +1659,54 @@ function renderResult(){
 
     state.days.forEach(ds => {
 
-      const x = res[ds][p];
+      const x =
+        res[ds][p];
 
       h +=
-        `<td ` +
-        `class="result-cell ${x==='D'?'cell-duty':x==='N'?'cell-night':x==='R'?'cell-rest':'cell-white'}" ` +
-        `data-date="${ds}" ` +
-        `data-person="${esc(p)}" ` +
-        `title="点击调整班次"` +
-        `>` +
-        `${SHIFT[x]}` +
-        `</td>`;
+        `<td
+          class="result-cell ${
+            x==='D'
+              ? 'cell-duty'
+              : x==='N'
+                ? 'cell-night'
+                : x==='R'
+                  ? 'cell-rest'
+                  : 'cell-white'
+          }"
+          data-date="${ds}"
+          data-person="${esc(p)}"
+          title="点击调整班次"
+        >${SHIFT[x]}</td>`;
     });
 
-    h += '</tr>';
+    h +=
+      '</tr>';
   });
 
-  h += '</tbody>';
+  h +=
+    '</tbody>';
 
-  t.innerHTML = h;
+  t.innerHTML =
+    h;
 
-  /*
-   * 为所有排班单元格绑定人工调整。
-   */
-  t.querySelectorAll('.result-cell').forEach(cell => {
+  t.querySelectorAll(
+    '.result-cell'
+  ).forEach(cell => {
 
     cell.onclick = () => {
 
-      const ds = cell.dataset.date;
-      const person = cell.dataset.person;
-
-      openShiftEditor(ds,person);
+      openShiftEditor(
+        cell.dataset.date,
+        cell.dataset.person
+      );
     };
   });
 }
 
 function resultCSV(){
 
-  const names = allPeople();
+  const names =
+    allPeople();
 
   let lines = [
     ['日期',...names].join(',')
@@ -1325,22 +1718,33 @@ function resultCSV(){
       [
         fmtDate(ds),
         ...names.map(
-          p => SHIFT[state.result[ds][p]]
+          p =>
+            SHIFT[
+              state.result[ds][p]
+            ]
         )
       ]
       .map(
-        x => '"' +
-          String(x).replace(/"/g,'""') +
+        x =>
+          '"' +
+          String(x).replace(
+            /"/g,
+            '""'
+          ) +
           '"'
       )
       .join(',')
     );
   });
 
-  return '\ufeff' + lines.join('\n');
+  return (
+    '\ufeff' +
+    lines.join('\n')
+  );
 }
 
 function xmlEsc(v){
+
   return String(v)
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
@@ -1349,33 +1753,53 @@ function xmlEsc(v){
     .replace(/'/g,'&apos;');
 }
 
-const ZIP_CRC_TABLE = (() => {
+const ZIP_CRC_TABLE =
+  (() => {
 
-  const t = new Uint32Array(256);
+    const t =
+      new Uint32Array(256);
 
-  for(let n=0;n<256;n++){
+    for(
+      let n=0;
+      n<256;
+      n++
+    ){
 
-    let c = n;
+      let c = n;
 
-    for(let k=0;k<8;k++){
-      c =
-        (c & 1)
-          ? (0xEDB88320 ^ (c >>> 1))
-          : (c >>> 1);
+      for(
+        let k=0;
+        k<8;
+        k++
+      ){
+
+        c =
+          (c & 1)
+            ? (
+                0xEDB88320 ^
+                (c >>> 1)
+              )
+            : (c >>> 1);
+      }
+
+      t[n] =
+        c >>> 0;
     }
 
-    t[n] = c >>> 0;
-  }
+    return t;
 
-  return t;
-
-})();
+  })();
 
 function crc32(bytes){
 
-  let c = 0xFFFFFFFF;
+  let c =
+    0xFFFFFFFF;
 
-  for(let i=0;i<bytes.length;i++){
+  for(
+    let i=0;
+    i<bytes.length;
+    i++
+  ){
 
     c =
       ZIP_CRC_TABLE[
@@ -1384,10 +1808,14 @@ function crc32(bytes){
       (c >>> 8);
   }
 
-  return (c ^ 0xFFFFFFFF) >>> 0;
+  return (
+    c ^
+    0xFFFFFFFF
+  ) >>> 0;
 }
 
 function u16(v){
+
   return new Uint8Array([
     v & 255,
     (v >>> 8) & 255
@@ -1395,6 +1823,7 @@ function u16(v){
 }
 
 function u32(v){
+
   return new Uint8Array([
     v & 255,
     (v >>> 8) & 255,
@@ -1405,19 +1834,21 @@ function u32(v){
 
 function concatBytes(...arrs){
 
-  let n =
+  const n =
     arrs.reduce(
       (s,a) => s+a.length,
       0
     );
 
-  let out =
+  const out =
     new Uint8Array(n);
 
   let p = 0;
 
   for(const a of arrs){
+
     out.set(a,p);
+
     p += a.length;
   }
 
@@ -1426,7 +1857,8 @@ function concatBytes(...arrs){
 
 function zipStore(files){
 
-  const enc = new TextEncoder();
+  const enc =
+    new TextEncoder();
 
   const parts = [];
   const central = [];
@@ -1435,30 +1867,40 @@ function zipStore(files){
 
   for(const f of files){
 
-    const name = enc.encode(f.name);
+    const name =
+      enc.encode(f.name);
 
     const data =
       typeof f.data === 'string'
         ? enc.encode(f.data)
         : f.data;
 
-    const crc = crc32(data);
+    const crc =
+      crc32(data);
 
     const local =
       concatBytes(
+
         new Uint8Array([
-          0x50,0x4b,0x03,0x04
+          0x50,
+          0x4b,
+          0x03,
+          0x04
         ]),
+
         u16(20),
         u16(0),
         u16(0),
         u16(0),
         u16(0),
+
         u32(crc),
         u32(data.length),
         u32(data.length),
+
         u16(name.length),
         u16(0),
+
         name,
         data
       );
@@ -1467,47 +1909,67 @@ function zipStore(files){
 
     const cent =
       concatBytes(
+
         new Uint8Array([
-          0x50,0x4b,0x01,0x02
+          0x50,
+          0x4b,
+          0x01,
+          0x02
         ]),
+
         u16(20),
         u16(20),
         u16(0),
         u16(0),
         u16(0),
         u16(0),
+
         u32(crc),
         u32(data.length),
         u32(data.length),
+
         u16(name.length),
         u16(0),
         u16(0),
         u16(0),
         u16(0),
+
         u32(0),
         u32(offset),
+
         name
       );
 
     central.push(cent);
 
-    offset += local.length;
+    offset +=
+      local.length;
   }
 
   const centralBytes =
-    concatBytes(...central);
+    concatBytes(
+      ...central
+    );
 
   const end =
     concatBytes(
+
       new Uint8Array([
-        0x50,0x4b,0x05,0x06
+        0x50,
+        0x4b,
+        0x05,
+        0x06
       ]),
+
       u16(0),
       u16(0),
+
       u16(files.length),
       u16(files.length),
+
       u32(centralBytes.length),
       u32(offset),
+
       u16(0)
     );
 
@@ -1526,91 +1988,113 @@ function colName(n){
 
   while(n){
 
-    const r = (n-1) % 26;
+    const r =
+      (n-1) % 26;
 
     s =
-      String.fromCharCode(65+r) + s;
+      String.fromCharCode(
+        65+r
+      ) + s;
 
     n =
-      Math.floor((n-1)/26);
+      Math.floor(
+        (n-1)/26
+      );
   }
 
   return s;
 }
 
-function xlsxCell(ref,value,style=0){
+function xlsxCell(
+  ref,
+  value,
+  style=0
+){
 
   return (
     `<c r="${ref}" s="${style}" t="inlineStr">` +
-    `<is><t>${xmlEsc(value)}</t></is>` +
+      `<is><t>${xmlEsc(value)}</t></is>` +
     `</c>`
   );
 }
 
 function buildXlsx(){
 
-  const names = allPeople();
-  const days = state.days;
-  const res = state.result;
+  const names =
+    allPeople();
+
+  const days =
+    state.days;
+
+  const res =
+    state.result;
 
   const sheetRows = [];
 
   const headers =
-    ['人员',...days.map(fmtDate)];
+    [
+      '人员',
+      ...days.map(fmtDate)
+    ];
 
   sheetRows.push(
     `<row r="1" ht="26" customHeight="1">` +
-    headers
-      .map(
-        (v,i) =>
-          xlsxCell(
-            `${colName(i)}1`,
-            v,
-            1
-          )
-      )
-      .join('') +
+      headers
+        .map(
+          (v,i) =>
+            xlsxCell(
+              `${colName(i)}1`,
+              v,
+              1
+            )
+        )
+        .join('') +
     `</row>`
   );
 
-  names.forEach((p,ri) => {
+  names.forEach(
+    (p,ri) => {
 
-    const cells = [
-      xlsxCell(
-        `A${ri+2}`,
-        p,
-        2
-      )
-    ];
-
-    days.forEach((ds,di) => {
-
-      const x = res[ds][p];
-
-      const style =
-        x === 'D'
-          ? 3
-          : x === 'W'
-            ? 4
-            : x === 'N'
-              ? 5
-              : 6;
-
-      cells.push(
+      const cells = [
         xlsxCell(
-          `${colName(di+1)}${ri+2}`,
-          SHIFT[x],
-          style
+          `A${ri+2}`,
+          p,
+          2
         )
-      );
-    });
+      ];
 
-    sheetRows.push(
-      `<row r="${ri+2}" ht="24" customHeight="1">` +
-      cells.join('') +
-      `</row>`
-    );
-  });
+      days.forEach(
+        (ds,di) => {
+
+          const x =
+            res[ds][p];
+
+          const style =
+            x === 'D'
+              ? 3
+              : x === 'W'
+                ? 4
+                : x === 'N'
+                  ? 5
+                  : 6;
+
+          cells.push(
+            xlsxCell(
+              `${colName(di+1)}${ri+2}`,
+              SHIFT[x],
+              style
+            )
+          );
+        }
+      );
+
+      sheetRows.push(
+        `<row r="${ri+2}" ht="24" customHeight="1">` +
+          cells.join('') +
+        `</row>`
+      );
+    }
+  );
 
   const lastRef =
     `${colName(days.length)}${names.length+1}`;
@@ -1620,24 +2104,51 @@ function buildXlsx(){
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <sheetViews>
     <sheetView workbookViewId="0" showGridLines="0">
-      <pane xSplit="1" ySplit="1" topLeftCell="B2" activePane="bottomRight" state="frozen"/>
+      <pane
+        xSplit="1"
+        ySplit="1"
+        topLeftCell="B2"
+        activePane="bottomRight"
+        state="frozen"
+      />
     </sheetView>
   </sheetViews>
 
   <sheetFormatPr defaultRowHeight="20"/>
 
   <cols>
-    <col min="1" max="1" width="18" customWidth="1"/>
-    <col min="2" max="${days.length+1}" width="12" customWidth="1"/>
+    <col
+      min="1"
+      max="1"
+      width="18"
+      customWidth="1"
+    />
+
+    <col
+      min="2"
+      max="${days.length+1}"
+      width="12"
+      customWidth="1"
+    />
   </cols>
 
   <sheetData>
     ${sheetRows.join('')}
   </sheetData>
 
-  <autoFilter ref="A1:${lastRef}"/>
+  <autoFilter
+    ref="A1:${lastRef}"
+  />
 
-  <pageMargins left="0.25" right="0.25" top="0.5" bottom="0.5" header="0.2" footer="0.2"/>
+  <pageMargins
+    left="0.25"
+    right="0.25"
+    top="0.5"
+    bottom="0.5"
+    header="0.2"
+    footer="0.2"
+  />
+
 </worksheet>`;
 
   const styles =
@@ -1647,6 +2158,7 @@ function buildXlsx(){
   <numFmts count="0"/>
 
   <fonts count="2">
+
     <font>
       <sz val="11"/>
       <name val="Calibri"/>
@@ -1659,6 +2171,7 @@ function buildXlsx(){
       <name val="Microsoft YaHei"/>
       <family val="2"/>
     </font>
+
   </fonts>
 
   <fills count="7">
@@ -1719,6 +2232,7 @@ function buildXlsx(){
     </border>
 
     <border>
+
       <left style="thin">
         <color rgb="FFD1D5DB"/>
       </left>
@@ -1736,48 +2250,121 @@ function buildXlsx(){
       </bottom>
 
       <diagonal/>
+
     </border>
 
   </borders>
 
   <cellStyleXfs count="1">
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+    <xf
+      numFmtId="0"
+      fontId="0"
+      fillId="0"
+      borderId="0"
+    />
   </cellStyleXfs>
 
   <cellXfs count="7">
 
-    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center"/>
+    <xf
+      numFmtId="0"
+      fontId="1"
+      fillId="2"
+      borderId="1"
+      applyAlignment="1"
+    >
+      <alignment
+        horizontal="center"
+        vertical="center"
+      />
     </xf>
 
-    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center"/>
+    <xf
+      numFmtId="0"
+      fontId="1"
+      fillId="2"
+      borderId="1"
+      applyAlignment="1"
+    >
+      <alignment
+        horizontal="center"
+        vertical="center"
+      />
     </xf>
 
-    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyAlignment="1">
-      <alignment horizontal="left" vertical="center"/>
+    <xf
+      numFmtId="0"
+      fontId="1"
+      fillId="2"
+      borderId="1"
+      applyAlignment="1"
+    >
+      <alignment
+        horizontal="left"
+        vertical="center"
+      />
     </xf>
 
-    <xf numFmtId="0" fontId="0" fillId="3" borderId="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center"/>
+    <xf
+      numFmtId="0"
+      fontId="0"
+      fillId="3"
+      borderId="1"
+      applyAlignment="1"
+    >
+      <alignment
+        horizontal="center"
+        vertical="center"
+      />
     </xf>
 
-    <xf numFmtId="0" fontId="0" fillId="4" borderId="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center"/>
+    <xf
+      numFmtId="0"
+      fontId="0"
+      fillId="4"
+      borderId="1"
+      applyAlignment="1"
+    >
+      <alignment
+        horizontal="center"
+        vertical="center"
+      />
     </xf>
 
-    <xf numFmtId="0" fontId="0" fillId="5" borderId="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center"/>
+    <xf
+      numFmtId="0"
+      fontId="0"
+      fillId="5"
+      borderId="1"
+      applyAlignment="1"
+    >
+      <alignment
+        horizontal="center"
+        vertical="center"
+      />
     </xf>
 
-    <xf numFmtId="0" fontId="0" fillId="6" borderId="1" applyAlignment="1">
-      <alignment horizontal="center" vertical="center"/>
+    <xf
+      numFmtId="0"
+      fontId="0"
+      fillId="6"
+      borderId="1"
+      applyAlignment="1"
+    >
+      <alignment
+        horizontal="center"
+        vertical="center"
+      />
     </xf>
 
   </cellXfs>
 
   <cellStyles count="1">
-    <cellStyle name="Normal" xfId="0" builtinId="0"/>
+    <cellStyle
+      name="Normal"
+      xfId="0"
+      builtinId="0"
+    />
   </cellStyles>
 
 </styleSheet>`;
@@ -1786,32 +2373,45 @@ function buildXlsx(){
 `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
           xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+
   <sheets>
-    <sheet name="排班表" sheetId="1" r:id="rId1"/>
+    <sheet
+      name="排班表"
+      sheetId="1"
+      r:id="rId1"
+    />
   </sheets>
+
 </workbook>`;
 
   const rels =
 `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+
   <Relationship
     Id="rId1"
     Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
-    Target="worksheets/sheet1.xml"/>
+    Target="worksheets/sheet1.xml"
+  />
 
   <Relationship
     Id="rId2"
     Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"
-    Target="styles.xml"/>
+    Target="styles.xml"
+  />
+
 </Relationships>`;
 
   const rootRels =
 `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+
   <Relationship
     Id="rId1"
     Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
-    Target="xl/workbook.xml"/>
+    Target="xl/workbook.xml"
+  />
+
 </Relationships>`;
 
   const contentTypes =
@@ -1820,23 +2420,28 @@ function buildXlsx(){
 
   <Default
     Extension="rels"
-    ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    ContentType="application/vnd.openxmlformats-package.relationships+xml"
+  />
 
   <Default
     Extension="xml"
-    ContentType="application/xml"/>
+    ContentType="application/xml"
+  />
 
   <Override
     PartName="/xl/workbook.xml"
-    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
+  />
 
   <Override
     PartName="/xl/worksheets/sheet1.xml"
-    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"
+  />
 
   <Override
     PartName="/xl/styles.xml"
-    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+    ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"
+  />
 
 </Types>`;
 
@@ -1876,7 +2481,10 @@ function buildXlsx(){
   );
 }
 
-function downloadBlob(blob,name){
+function downloadBlob(
+  blob,
+  name
+){
 
   const url =
     URL.createObjectURL(blob);
@@ -1885,6 +2493,7 @@ function downloadBlob(blob,name){
     document.createElement('a');
 
   a.href = url;
+
   a.download = name;
 
   document.body.appendChild(a);
@@ -1894,60 +2503,70 @@ function downloadBlob(blob,name){
   a.remove();
 
   setTimeout(
-    () => URL.revokeObjectURL(url),
+    () =>
+      URL.revokeObjectURL(url),
     1500
   );
 }
 
-$('downloadBtn').onclick = () => {
-
-  downloadBlob(
-    buildXlsx(),
-    `排班表_${state.month}.xlsx`
-  );
-};
-
-$('downloadCsvBtn').onclick = () => {
-
-  downloadBlob(
-    new Blob(
-      [resultCSV()],
-      {
-        type:'text/csv;charset=utf-8;'
-      }
-    ),
-    `排班表_${state.month}.csv`
-  );
-};
-
-$('copyBtn').onclick = async () => {
-
-  try{
-
-    await navigator.clipboard.writeText(
-      resultCSV()
+$('downloadBtn').onclick =
+  () =>
+    downloadBlob(
+      buildXlsx(),
+      `排班表_${state.month}.xlsx`
     );
 
-    alert('已复制CSV排班结果。');
+$('downloadCsvBtn').onclick =
+  () =>
+    downloadBlob(
+      new Blob(
+        [resultCSV()],
+        {
+          type:
+            'text/csv;charset=utf-8;'
+        }
+      ),
+      `排班表_${state.month}.csv`
+    );
 
-  }catch(e){
+$('copyBtn').onclick =
+  async () => {
 
-    const ta =
-      document.createElement('textarea');
+    try{
 
-    ta.value = resultCSV();
+      await navigator.clipboard.writeText(
+        resultCSV()
+      );
 
-    document.body.appendChild(ta);
+      alert(
+        '已复制CSV排班结果。'
+      );
 
-    ta.select();
+    }catch(e){
 
-    document.execCommand('copy');
+      const ta =
+        document.createElement(
+          'textarea'
+        );
 
-    ta.remove();
+      ta.value =
+        resultCSV();
 
-    alert('已复制。');
-  }
-};
+      document.body.appendChild(
+        ta
+      );
+
+      ta.select();
+
+      document.execCommand(
+        'copy'
+      );
+
+      ta.remove();
+
+      alert('已复制。');
+    }
+  };
 
 $('restartBtn').onclick =
 $('againBtn').onclick = () => {
@@ -1972,14 +2591,16 @@ $('againBtn').onclick = () => {
 
 $('startBtn').onclick = () => {
 
-  const v = $('monthInput').value;
+  const v =
+    $('monthInput').value;
 
   if(!v){
     alert('请选择月份');
     return;
   }
 
-  state.month = v;
+  state.month =
+    v;
 
   buildDays();
 
@@ -1987,6 +2608,7 @@ $('startBtn').onclick = () => {
   initDutyDates();
 
   state.firstDay = {};
+
   state.firstDuty =
     allPeople()[0] || '';
 
@@ -1999,20 +2621,27 @@ $('startBtn').onclick = () => {
 };
 
 $('back1').onclick =
-  () => showStep(1);
+  () =>
+    showStep(1);
 
 $('back2').onclick = () => {
+
   renderHolidayCalendar();
+
   showStep(2);
 };
 
 $('back3').onclick = () => {
+
   renderDutyCalendar();
+
   showStep(3);
 };
 
 $('next2').onclick = () => {
+
   renderDutyCalendar();
+
   showStep(3);
 };
 
@@ -2026,13 +2655,16 @@ $('next3').onclick = () => {
 };
 
 $('addOld').onclick =
-  () => addPerson('olds');
+  () =>
+    addPerson('olds');
 
 $('addNew').onclick =
-  () => addPerson('news');
+  () =>
+    addPerson('news');
 
 $('generateBtn').onclick =
   generate;
 
 ensureEditDialog();
+
 initMonth();
